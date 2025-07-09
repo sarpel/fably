@@ -20,6 +20,9 @@ setup(
         'pydub',
         'gpiozero',
         'aiohttp',  # For ElevenLabs async requests
+        # Wakeword engines (optional)
+        'pvporcupine; platform_machine=="armv7l" or platform_machine=="aarch64"',  # PPN for Pi
+        'onnxruntime; platform_machine!="armv7l"',  # ONNX for other platforms
     ],
     entry_points='''
         [console_scripts]

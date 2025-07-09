@@ -145,8 +145,10 @@ setup_python_environment() {
     PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
     log "Python version: $PYTHON_VERSION"
     
-    if [[ $(echo "$PYTHON_VERSION 3.8" | awk '{print ($1 >= $2)}') == 1 ]]; then
-        log "Python version is compatible (>= 3.8)"
+    # Convert version to comparable format (e.g., 3.11 -> 311)
+    PYTHON_VER_NUM=$(echo "$PYTHON_VERSION" | sed 's/\.//' | sed 's/^\([0-9][0-9]*\)$/\10/')
+    if [[ $PYTHON_VER_NUM -ge 38 ]]; then
+        log "Python version is compatible (>= 3.8): $PYTHON_VERSION"
     else
         error "Python 3.8 or higher is required, found $PYTHON_VERSION"
         exit 1
@@ -198,15 +200,20 @@ install_python_dependencies() {
             pip install \
                 apa102-pi \
                 gpiozero \
-                RPi.GPIO
+                RPi.GPIO \
+                pvporcupine  # Wakeword for Pi (recommended)
             ;;
         "linux")
             log "Installing Linux audio packages..."
-            pip install pyaudio
+            pip install \
+                pyaudio \
+                onnxruntime  # Wakeword for Linux
             ;;
         "macos")
             log "Installing macOS audio packages..."
-            pip install pyaudio
+            pip install \
+                pyaudio \
+                onnxruntime  # Wakeword for macOS
             ;;
     esac
     

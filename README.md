@@ -1,880 +1,380 @@
-# 📚 Fably - Yapay Zeka Hikaye Anlatıcısı
+# 🎭 Fably - 5 Yaşındaki Kızın AI Hikaye Anlatıcısı
 
-> 5 yaşındaki Türk çocukları için özel olarak tasarlanmış yapay zeka destekli hikaye anlatıcısı
+**Fably**, 5 yaşındaki çocuklara özel olarak tasarlanmış yapay zeka destekli hikaye anlatıcısıdır. Gelişmiş ses tanıma, doğal dil işleme ve metin-ses teknolojisi kullanarak kişiselleştirilmiş, etkileşimli hikayeler oluşturur.
 
-Fably, çocukların hayal gücünü geliştiren, güvenli ve eğitici hikayeler oluşturan gelişmiş bir AI sistemidir. Raspberry Pi'da çalışacak şekilde optimize edilmiş, tamamen Türkçe dil desteği sunan ve çoklu AI provider entegrasyonu içeren modern bir hikaye anlatıcısıdır.
+## ✨ Temel Özellikler
 
-## 🌟 Temel Özellikler
+### 🎙️ **Gelişmiş Ses Etkileşimi**
+- **Çoklu Ses Tanıma** - OpenAI Whisper, Google Cloud Speech, Yerel Whisper
+- **Gürültü Azaltma** - Ev ortamı için gelişmiş ses filtreleme
+- **Otomatik Kalibrasyon** - Oda gürültüsüne otomatik uyum
+- **Ses Değiştirme** - Farklı anlatıcı sesleri arasında geçiş
 
-### 🎯 Çocuk Odaklı Tasarım
-- **5 yaş grubu için optimize** - Yaş grubuna uygun kelime dağarcığı ve anlatım
-- **Tamamen güvenli içerik** - Şiddet, korku ve uygunsuz içerik filtresi
-- **Türk kültürü uyumlu** - Türk isimleri, değerleri ve kültürel öğeler
-- **Eğitici değerler** - Dostluk, paylaşma, dürüstlük gibi değerleri öğretir
+### 🧠 **Çoklu AI Desteği**
+- **OpenAI GPT** - GPT-4o, GPT-4o Mini yüksek kaliteli hikayeler için
+- **Google Gemini** - Gemini 1.5 Pro, Gemini 1.5 Flash
+- **DeepSeek** - Uygun maliyetli, mükemmel Türkçe desteği
+- **Yerel Modeller** - Gizlilik odaklı Ollama desteği
 
-### 🤖 Gelişmiş AI Entegrasyonu
-- **Çoklu LLM Desteği**: OpenAI GPT-4o, Google Gemini, Deepseek
-- **Akıllı STT**: OpenAI Whisper, Google Cloud Speech, Local Whisper
-- **Kaliteli TTS**: OpenAI sesler, ElevenLabs premium sesler
-- **Ses Kalitesi**: Gürültü azaltma, otomatik kalibrasyon
+### 🔊 **Profesyonel Metin-Ses**
+- **OpenAI Sesleri** - Nova, Alloy, Echo, Fable, Onyx, Shimmer
+- **ElevenLabs** - Duygusal ifade ile premium ses sentezi
+- **Ses Tutarlılığı** - Hikaye boyunca karakter seslerini koruma
 
-### 🎨 Modern Kullanıcı Arayüzü
-- **Gelişmiş Web Arayüzü**: Modern, responsive Gradio tabanlı
-- **Light/Dark Mode**: Tema değiştirme desteği
-- **Canlı İzleme**: Sistem metrikleri, CPU/RAM/disk takibi
-- **Live Loglar**: Gerçek zamanlı sistem günlükleri
-- **Mobil Uyumlu**: Tablet ve telefon desteği
+### 📚 **Hikaye Yönetimi**
+- **Hikaye Devamı** - Mevcut hikayeleri yeni maceralarla genişletme
+- **Akıllı Organizasyon** - Otomatik kategorilendirme ve metadata takibi
+- **Koleksiyon Yönetimi** - Hikaye koleksiyonları oluşturma ve paylaşma
 
-### 🔧 Donanım ve Sistem
-- **Raspberry Pi Optimize**: Pi Zero 2W ve Pi 5 desteği
-- **Düşük Kaynak**: 512MB RAM'de çalışır
-- **GPIO Desteği**: Düğme kontrolü, LED feedback
-- **Ses İşleme**: Gelişmiş gürültü azaltma algoritmaları
+### 🌐 **Modern Web Arayüzü**
+- **Gerçek Zamanlı Üretim** - Hikayelerin paragraf paragraf gelişimini izleme
+- **Etkileşimli Kontroller** - Oynat, duraklat, atla, yeniden üret
+- **Görsel Hikaye Tarayıcısı** - Arama ve filtreleme ile zengin arayüz
+
+### 🏠 **Raspberry Pi Optimizasyonu**
+- **Düşük Güç Tüketimi** - Her zaman açık çalışma için tasarlandı
+- **Donanım Kontrolleri** - Çocuk dostu fiziksel düğme
+- **LED Durum Göstergeleri** - Sistem durumu için görsel geri bildirim
+- **Otomatik Başlatma** - Sistem ile birlikte otomatik açılır
 
 ## 🚀 Hızlı Başlangıç
 
-### Kurulum
+### Tek Komut Kurulum
 
-1. **Repository'yi klonlayın:**
 ```bash
-git clone https://github.com/stefanom/fably.git
+# Fably'yi klon et ve kur (tüm bağımlılıklar dahil)
+git clone https://github.com/sarpel/fably.git
 cd fably
-```
-
-2. **Bağımlılıkları yükleyin:**
-```bash
-python -m venv fably-env
-source fably-env/bin/activate  # Linux/Mac
-# veya
-fably-env\Scripts\activate  # Windows
-
-pip install --editable .
-```
-
-3. **API anahtarlarını ayarlayın:**
-```bash
-cp env.example .env
-# .env dosyasını düzenleyerek API anahtarlarınızı ekleyin
-```
-
-### Temel Kullanım
-
-**Komut satırından hikaye oluşturma:**
-```bash
-fably "bana bir prenses hikayesi anlat"
-```
-
-**Web arayüzünü başlatma:**
-```bash
-fably --web-interface
-# Tarayıcıda http://localhost:7860 adresine gidin
-```
-
-**Gelişmiş seçeneklerle:**
-```bash
-fably --llm-provider gemini \
-      --tts-provider elevenlabs \
-      --noise-reduction \
-      --auto-calibrate \
-      --loop
-```
-
-## ⚙️ Konfigürasyon
-
-### API Anahtarları
-
-`.env` dosyasında gerekli API anahtarlarını ayarlayın:
-
-```env
-# OpenAI (zorunlu - temel LLM ve TTS için)
-OPENAI_API_KEY=sk-...
-
-# Google Gemini (opsiyonel - gelişmiş LLM için)
-GEMINI_API_KEY=AI...
-
-# Deepseek (opsiyonel - alternatif LLM için)
-DEEPSEEK_API_KEY=sk-...
-
-# ElevenLabs (opsiyonel - premium TTS için)
-ELEVENLABS_API_KEY=...
-
-# Google Cloud (opsiyonel - gelişmiş STT için)
-GOOGLE_CLOUD_API_KEY=...
-GOOGLE_PROJECT_ID=your-project-id
-```
-
-### Provider Seçenekleri
-
-#### LLM (Language Model) Sağlayıcıları:
-- **OpenAI**: `gpt-4o`, `gpt-4o-mini`, `gpt-3.5-turbo`
-- **Google Gemini**: `gemini-1.5-pro`, `gemini-1.5-flash`, `gemini-pro`
-- **Deepseek**: `deepseek-chat`, `deepseek-coder`
-
-#### STT (Speech-to-Text) Sağlayıcıları:
-- **OpenAI Whisper**: Cloud tabanlı, hızlı
-- **Google Cloud Speech**: Yüksek doğruluk, Türkçe optimize
-- **Local Whisper**: Offline çalışma, gizlilik
-
-#### TTS (Text-to-Speech) Sağlayıcıları:
-- **OpenAI**: `nova`, `alloy`, `echo`, `fable`, `onyx`, `shimmer`
-- **ElevenLabs**: Premium kalitede, çeşitli sesler
-
-## 🎮 Kullanım Senaryoları
-
-### 1. Basit Hikaye Anlatımı
-```bash
-# OpenAI ile basit kullanım
-fably "bana bir kedi hikayesi anlat"
-```
-
-### 2. Premium Kalite
-```bash
-# Gemini LLM + ElevenLabs TTS
-fably --llm-provider gemini \
-      --tts-provider elevenlabs \
-      "bana bir macera hikayesi anlat"
-```
-
-### 3. Offline Çalışma
-```bash
-# Tamamen yerel modeller
-fably --stt-provider local_whisper \
-      --local-whisper-model base \
-      --loop
-```
-
-### 4. Gürültülü Ortam
-```bash
-# Gelişmiş ses işleme
-fably --noise-reduction \
-      --noise-sensitivity 1.5 \
-      --auto-calibrate \
-      --calibration-duration 5.0
-```
-
-### 5. Ses Değiştirme Modu
-```bash
-# Düğme ile ses değiştirme
-fably --voice-cycle --loop
-# Çift tıklama ile sesler arasında geçiş
-```
-
-## 📱 Web Arayüzü Özellikleri
-
-Web arayüzünü `fably --web-interface` ile başlatın ve aşağıdaki özelliklerden yararlanın:
-
-### 📖 Hikaye Kütüphanesi
-- Mevcut hikayeleri görüntüleme ve düzenleme
-- Paragraf bazında düzenleme
-- Ses yeniden oluşturma
-- Hikaye devam ettirme
-
-### ✨ Yeni Hikaye Oluşturma
-- Sesli veya yazılı talep
-- Provider ve model seçimi
-- Gerçek zamanlı hikaye oluşturma
-- Ses sentezi ve kaydetme
-
-### 📚 Koleksiyonlar
-- Hikaye arama ve filtreleme
-- İstatistikler ve analizler
-- Toplu işlemler
-- Dışa aktarma
-
-### ⚙️ Ayarlar
-- API anahtarı yönetimi
-- Provider konfigürasyonu
-- Ses kalitesi ayarları
-- Sistem parametreleri
-
-### 🔧 Sistem İzleme
-- CPU, RAM, disk kullanımı
-- Sıcaklık monitörü
-- Gerçek zamanlı grafikler
-- Performance metrikleri
-
-### 📋 Canlı Günlükler
-- Gerçek zamanlı log akışı
-- Log seviyesi filtreleme
-- Hata takibi
-- Sistem durumu
-
-### 🎨 Tema Desteği
-- Light/Dark mode toggle
-- Modern, responsive tasarım
-- Mobil cihaz uyumluluğu
-- Accessibility desteği
-
-## 🔧 Raspberry Pi Kurulumu
-
-### Otomatik Kurulum (Önerilen)
-```bash
-# Tüm bağımlılıkları otomatik yükler
 chmod +x setup.sh
 ./setup.sh
 ```
 
-### Systemd Servisi Kurulumu
+### İlk Hikaye
+
 ```bash
-# Otomatik başlatma için
-sudo cp install/rpi/fably.service /etc/systemd/system/
+# Ortamı aktif et
+source .venv/bin/activate
+
+# İlk hikayeni oluştur
+fably "Bana cesur bir fare hakkında hikaye anlat"
+
+# Etkileşimli mod
+fably --noise-reduction --auto-calibrate --loop
+
+# Web arayüzü
+fably --web-app
+```
+
+## 📖 Kullanım Kılavuzu
+
+### 🎮 Komut Satırı
+
+#### **Temel Hikaye Üretimi**
+```bash
+# Tek hikaye üretimi
+fably "Bana ejder ve prensesler hakkında hikaye anlat"
+fably "Bir robot dinozorla karşılaştığında ne olur?"
+
+# Belirli ayarlarla hikaye
+fably --voice "elevenlabs:rachel" --paragraphs 5 "Uzay macerası hikayesi"
+fably --model "gpt-4o" --voice "openai:nova" "Suya hikayesi"
+```
+
+#### **Etkileşimli Döngü Modu**
+```bash
+# Ses komutlarını dinlemeye başla
+fably --loop
+
+# Gelişmiş kalite modu (önerilen)
+fably --noise-reduction --auto-calibrate --loop
+
+# Ses değiştirme modu
+fably --voice-cycle --loop
+
+# Tüm özellikler bir arada
+fably --noise-reduction --auto-calibrate --voice-cycle --loop
+```
+
+#### **Hikaye Devamı**
+```bash
+# Mevcut hikayeyi devam ettir
+fably --continue "cesur_sovalye_hakkinda" "Şövalye ejderle karşılaştığında ne olur?"
+
+# Farklı sesle devam ettir
+fably --continue "uzay_macerasi" --voice "elevenlabs:adam" "Uzay gemisi Mars'a iniyor"
+```
+
+### 🌐 Web Arayüzü
+
+```bash
+fably --web-app
+# http://localhost:7860 adresinde açılır
+```
+
+#### **Web Arayüzü Özellikleri**
+
+**📚 Hikaye Üretimi Sekmesi**
+- Hikaye istemleri için metin girişi
+- Ses seçimi (OpenAI + ElevenLabs)
+- Model seçimi (GPT-4o, Gemini, DeepSeek)
+- Paragraf sayısı kontrolü (1-10)
+
+**📖 Hikaye Kütüphanesi**
+- Zengin metadata ile görsel hikaye tarayıcısı
+- Her paragraf için ses oynatma/duraklama
+- Bireysel paragrafları yeniden üretme
+- Hikaye devam ettirme işlevi
+
+### 🔧 Gelişmiş Yapılandırma
+
+#### **Ortam Değişkenleri (.env dosyası)**
+```bash
+# Gerekli: OpenAI API anahtarı
+OPENAI_API_KEY=sk-openai-api-anahtariniz
+
+# İsteğe bağlı: Ek sağlayıcılar
+ELEVENLABS_API_KEY=elevenlabs-anahtariniz
+GEMINI_API_KEY=gemini-anahtariniz
+DEEPSEEK_API_KEY=deepseek-anahtariniz
+```
+
+#### **Komut Satırı Seçenekleri**
+
+**📝 Hikaye Üretimi**
+- `--model` - AI model seçimi
+  - `gpt-4o` - OpenAI GPT-4o (en yüksek kalite)
+  - `gpt-4o-mini` - OpenAI GPT-4o Mini (hızlı, uygun maliyetli)
+  - `gemini-1.5-pro` - Google Gemini Pro (yaratıcı)
+  - `deepseek-chat` - DeepSeek Chat (ekonomik)
+
+- `--voice` - Metin-ses sesi seçimi
+  - OpenAI: `openai:nova`, `openai:alloy`, `openai:echo`
+  - ElevenLabs: `elevenlabs:rachel`, `elevenlabs:adam`
+
+- `--paragraphs` - Hikaye paragraf sayısı (1-10, varsayılan: 6)
+
+**🎙️ Ses Ayarları**
+- `--noise-reduction` - Gelişmiş gürültü filtreleme
+- `--noise-sensitivity` - Gürültü geçidi hassasiyeti (0.1-10.0)
+- `--auto-calibrate` - Oda gürültüsünü otomatik ölçme
+- `--voice-cycle` - Çeşitlilik için farklı sesler arasında geçiş
+
+**🔄 Hikaye Devamı**
+- `--continue HIKAYE_ADI` - Mevcut hikayeyi devam ettir
+
+**🎯 Hikaye İstemleri**
+- `--story-request` - Belirli bir hikaye konusu iste
+
+**🎙️ Uyandırma Kelimesi**
+- `--wakeword-engine` - Wakeword motoru (ppn, onnx, tflite)
+- `--wakeword-model` - Wakeword model dosya yolu
+- `--wakeword-sensitivity` - Algılama hassasiyeti (0.0-1.0)
+
+**🔘 GPIO Kontrolleri**
+- `--gpio-button` - GPIO button'u wakeword alternatifi olarak etkinleştir
+- `--button-gpio-pin` - GPIO pin numarası (varsayılan: 17)
+
+**🎛️ Sistem Kontrolleri**
+- `--loop` - Etkileşimli ses komut modu
+- `--web-app` - Web arayüzünü başlat
+- `--list-voices` - Tüm mevcut sesleri göster
+- `--list-stories` - Tüm kayıtlı hikayeleri göster
+
+**🎯 Hikaye İstemleri**
+- `--story-request` - Belirli bir hikaye konusu iste
+
+### 🏠 Raspberry Pi Kurulumu
+
+#### **Donanım Gereksinimleri**
+- **Raspberry Pi Zero 2W** (önerilen) veya Pi 4
+- **reSpeaker 2-Mic HAT** (en iyi ses kalitesi için)
+- **MicroSD kart** (32GB+, Class 10)
+
+#### **Donanım Kurulumu**
+```bash
+# Otomatik kurulumu çalıştır (her şeyi halleder)
+./setup.sh
+
+# Ses kurulumunu test et
+aplay /usr/share/sounds/alsa/Front_Center.wav
+```
+
+#### **Otomatik Başlatma Servisi**
+```bash
+# Otomatik başlatmayı etkinleştir
 sudo systemctl enable fably.service
 sudo systemctl start fably.service
 
-# Durum kontrolü
+# Durumu kontrol et
 sudo systemctl status fably.service
 ```
 
-### Donanım Gereksinimleri
+#### **Donanım Kontrolleri**
+- **Düğme Basımı** - Ses kaydını başlat
+- **LED Göstergeleri**:
+  - 🔵 Mavi - Sistem hazır
+  - 🟢 Yeşil - Ses dinliyor
+  - 🟡 Sarı - Hikaye işleniyor
+  - 🔴 Kırmızı - Hata
 
-#### Raspberry Pi Zero 2W (Minimum)
-- **RAM**: 512MB
-- **CPU**: Quad-core ARM Cortex-A53
-- **Storage**: 16GB microSD (Class 10)
-- **Audio**: USB Audio Adapter
-- **Network**: WiFi
+### 🎯 Hikaye İstek Sistemi
 
-#### Raspberry Pi 5 (Önerilen)
-- **RAM**: 8GB
-- **CPU**: Quad-core ARM Cortex-A76
-- **Storage**: 32GB microSD (A2 sınıfı)
-- **Audio**: USB Audio / HAT
-- **Cooling**: Aktif soğutma
-
-### Ses Donanımı
-- **Mikrofon**: USB mikrofon veya HAT
-- **Hoparlör**: 3.5mm veya USB hoparlör
-- **Önerilen**: Waveshare USB Audio Adapter
-
-## 🎛️ Gelişmiş Özellikler
-
-### Ses Kalitesi Optimizasyonu
-
-**Gürültü Azaltma:**
+#### **Belirli Hikaye Talepleri**
 ```bash
-fably --noise-reduction \
-      --noise-sensitivity 2.5 \
-      --auto-calibrate \
-      --calibration-duration 4.0
+# Belirli bir konu hakkında hikaye iste
+fably --story-request "Uzayda yaşayan bir kedi hakkında"
+fably --story-request "Sihirli orman macerası"
+fably --story-request "Prenses ve ejder dostluğu"
+
+# Web arayüzünden
+# Hikaye İsteği: "Denizin dibinde yaşayan balık prenses"
 ```
 
-**Parametreler:**
-- `--noise-sensitivity`: 0.1-10.0 (yüksek = daha hassas)
-- `--calibration-duration`: 1.0-10.0 saniye
-- `--auto-calibrate`: Otomatik ortam gürültüsü ölçümü
+### 🎙️ Uyandırma Kelimesi (Wakeword) Sistemi
 
-### Ses Döngüsü (Voice Cycling)
+#### **Desteklenen Formatlar**
+- **PPN (Picovoice)** - Profesyonel, düşük RAM (ÖNERİLEN Pi Zero 2W için)
+- **ONNX** - Kendi eğitilen model
+- **TFLite** - TensorFlow Lite model (opsiyonel)
+
+#### **Wakeword Kullanımı**
 ```bash
-# Düğme ile ses değiştirme
-fably --voice-cycle --loop
+# PPN wakeword ile (önerilen)
+fably --wakeword-engine ppn --wakeword-model "fably.ppn" --loop
 
-# Düğmeye çift tıklayarak sesler arasında geçiş yapın
+# ONNX wakeword ile
+fably --wakeword-engine onnx --wakeword-model "fably.onnx" --loop
+
+# Wakeword hassasiyeti ayarı
+fably --wakeword-engine ppn --wakeword-model "fably.ppn" --wakeword-sensitivity 0.7 --loop
 ```
 
-### Hikaye Devam Ettirme
+### 🔘 GPIO Button Sistemi
+
+#### **Button İşlevleri**
+- **Tek basış**: Ses kaydı başlat (wakeword alternatifi)
+- **Çift basış**: Ses değiştir (voice-cycle aktifse)
+- **Uzun basış**: Sistem kapatma
+
+#### **GPIO Button Kullanımı**
 ```bash
-# Mevcut hikayeye devam et
-fably --continue-story "prenses" "ejderle karşılaştığında ne oldu?"
-```
+# GPIO button aktif et
+fably --gpio-button --loop
 
-### Provider Testleri
-```bash
-# Tüm provider'ları test et
-fably --test-providers
+# GPIO button + ses değiştirme
+fably --gpio-button --voice-cycle --loop
 
-# Mevcut sesleri listele
-faby --list-voices
-
-# Ses önizlemesi
-fably --voice-preview "nova"
-```
-
-## 🔒 Güvenlik ve Gizlilik
-
-### Çocuk Güvenliği
-- **İçerik Filtresi**: Otomatik şiddet/korku tespiti
-- **Kültürel Uyum**: Türk değerleri ve aile yapısı
-- **Yaş Uygunluk**: 5 yaş seviyesinde kelime seçimi
-- **Pozitif Mesajlar**: Her hikaye öğretici değerler içerir
-
-### Veri Güvenliği
-- **Yerel İşleme**: Ses kayıtları cihazda kalır
-- **Şifreli Bağlantı**: API çağrıları HTTPS ile
-- **Veri Saklama**: Hikayeler yerel olarak saklanır
-- **Gizlilik**: Kişisel veri paylaşımı yok
-
-### Offline Çalışma
-```bash
-# Tamamen offline mod
-fably --stt-provider local_whisper \
-      --llm-provider ollama \
-      --local-whisper-model base
-```
-
-## 📊 Performans ve Optimizasyon
-
-### Bellek Kullanımı
-- **Pi Zero 2W**: ~300MB RAM kullanımı
-- **Pi 5**: ~1GB RAM kullanımı (gelişmiş özelliklerle)
-- **Optimizasyon**: Model boyutu ayarlanabilir
-
-### Response Süreleri
-- **STT**: 1-3 saniye (ses uzunluğuna bağlı)
-- **LLM**: 5-15 saniye (model ve token sayısına bağlı)
-- **TTS**: 2-5 saniye (metin uzunluğuna bağlı)
-- **Toplam**: 8-23 saniye (end-to-end)
-
-### Optimizasyon İpuçları
-
-**Hız için:**
-```bash
-fably --llm-model gpt-3.5-turbo \
-      --max-tokens 1000 \
-      --tts-provider openai
-```
-
-**Kalite için:**
-```bash
-fably --llm-provider gemini \
-      --llm-model gemini-1.5-pro \
-      --tts-provider elevenlabs \
-      --max-tokens 2000
-```
-
-**Düşük kaynak için:**
-```bash
-fably --local-whisper-model tiny \
-      --max-tokens 800 \
-      --noise-reduction false
+# Button pin değiştir
+fably --gpio-button --button-gpio-pin 18 --loop
 ```
 
 ## 🛠️ Geliştirme
 
-### Kod Kalitesi
+### **Geliştirme Kurulumu**
 ```bash
-# Kod formatlama
-./format.sh
+# Depoyu klonla
+git clone https://github.com/sarpel/fably.git
+cd fably
 
-# Lint kontrolleri
-./check.sh
-
-# Tüm kontroller
-./push.sh "commit mesajı"
-```
-
-### Test Etme
-```bash
-# Unit testler
-python -m pytest tests/ -v
-
-# Entegrasyon testleri
-python tests/test_asyncio.py
-
-# Ses testleri
-python tools/capture_voice_query.py
-python tools/mic_spectrogram.py
-```
-
-### Custom Provider Ekleme
-
-Yeni bir LLM provider eklemek için `fably/llm_service.py` dosyasına:
-
-```python
-class CustomLLMProvider(LLMProvider):
-    def __init__(self, api_key: str, base_url: str):
-        super().__init__("Custom", api_key, base_url)
-    
-    async def generate_story(self, prompt: str, **kwargs):
-        # Kendi implementasyonunuz
-        pass
-```
-
-## 📈 İzleme ve Log
-
-### Sistem Logları
-```bash
-# Systemd logları
-journalctl -u fably.service -f
-
-# Debug modu
-fably --debug --loop
-
-# Performans testi
-python tools/performance_test.py
-```
-
-### Web Arayüzü İzleme
-- Gerçek zamanlı CPU/RAM/disk grafikler
-- Live log akışı
-- Provider durumu
-- Ses kalitesi metrikleri
-
-## 🔄 Güncelleme
-
-### Otomatik Güncelleme
-```bash
-./update.sh
-```
-
-### Manuel Güncelleme
-```bash
-git pull origin main
-pip install --editable . --upgrade
-sudo systemctl restart fably.service
-```
-
-## 🐛 Sorun Giderme
-
-### Yaygın Problemler
-
-**1. API Anahtarı Hatası:**
-```
-ValueError: OPENAI_API_KEY environment variable not set
-```
-**Çözüm:** `.env` dosyasında API anahtarınızı kontrol edin.
-
-**2. Ses Cihazı Bulunamadı:**
-```bash
-# Ses cihazlarını listele
-python tools/list_sound_devices.py
-
-# ALSA ayarları (Raspberry Pi)
-sudo raspi-config  # Advanced Options > Audio
-```
-
-**3. Permission Hatası (GPIO):**
-```bash
-sudo usermod -a -G gpio $USER
-# Oturumu yeniden başlatın
-```
-
-**4. Düşük Ses Kalitesi:**
-```bash
-# Gürültü tabanı ölçümü
-python tools/noise_floor.py
-
-# Mikrofon test
-python tools/mic_spectrogram.py
-
-# Gelişmiş ses filtresi
-fably --noise-reduction --auto-calibrate --debug
-```
-
-**5. Yavaş Response:**
-```bash
-# Lightweight modeller kullanın
-fably --llm-model gpt-3.5-turbo \
-      --local-whisper-model tiny \
-      --max-tokens 1000
-```
-
-### Debug Komutları
-```bash
-# Provider bağlantı testleri
-fably --test-providers
-
-# Ses önizleme
-fably --voice-preview nova
-
-# Sistem durumu
-htop
-vcgencmd measure_temp  # Raspberry Pi sıcaklık
-```
-
-## 📞 Destek ve Topluluk
-
-### Topluluk Kaynakları
-- **GitHub Issues**: [Sorun bildirimi](https://github.com/stefanom/fably/issues)
-- **Discussions**: [Topluluk forumu](https://github.com/stefanom/fably/discussions)
-- **Wiki**: [Detaylı dokümantasyon](https://github.com/stefanom/fably/wiki)
-
-### Katkıda Bulunma
-1. Fork edin ve klonlayın
-2. Feature branch oluşturun (`git checkout -b yeni-ozellik`)
-3. Değişikliklerinizi commit edin (`git commit -am 'feat: yeni özellik'`)
-4. Branch'i push edin (`git push origin yeni-ozellik`)
-5. Pull Request oluşturun
-
-### Dokümantasyon
-- **Installation Guide**: [Kurulum rehberi](docs/installation.md)
-- **API Reference**: [API dokümantasyonu](docs/api.md)
-- **Hardware Guide**: [Donanım kılavuzu](docs/hardware.md)
-- **Troubleshooting**: [Sorun giderme](docs/troubleshooting.md)
-
-## 📝 Lisans
-
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
-
-## 🙏 Teşekkürler
-
-Fably projesi aşağıdaki açık kaynak projelerin desteğiyle geliştirilmektedir:
-
-- **OpenAI**: GPT modelleri ve Whisper STT
-- **Google**: Gemini AI ve Cloud Speech API
-- **Deepseek**: Açık kaynak LLM modelleri
-- **ElevenLabs**: Kaliteli TTS servisleri
-- **Gradio**: Modern web arayüzü framework
-- **Raspberry Pi Foundation**: Uygun fiyatlı donanım platformu
-
-## 🚀 Roadmap
-
-### v2.0 (Yakında)
-- [ ] Çoklu dil desteği (İngilizce, Arapça)
-- [ ] Görsel hikaye desteği (DALL-E entegrasyonu)
-- [ ] Sesli etkileşim (soru-cevap diyalogları)
-- [ ] Ebeveyn dashboard ve kontrol paneli
-- [ ] Hikaye kişiselleştirme (çocuğun ismini kullanma)
-
-### v2.1
-- [ ] Çocuk profilleri ve tercihleri
-- [ ] İlerleme takibi ve başarı rozetleri
-- [ ] Gamification öğeleri
-- [ ] Sosyal paylaşım (güvenli)
-
-### v3.0
-- [ ] AR/VR entegrasyonu
-- [ ] Çoklu karakter sesleri
-- [ ] İnteraktif hikayeler (seçim yapma)
-- [ ] AI öğretmen asistanı
-
----
-
-## 🌈 Hızlı Başlangıç Özeti
-
-```bash
-# 1. Klonla
-git clone https://github.com/stefanom/fably.git && cd fably
-
-# 2. Kur
-python -m venv fably-env && source fably-env/bin/activate
+# Geliştirme modunda kur
 pip install --editable .
 
-# 3. API anahtarını ayarla
-echo "OPENAI_API_KEY=sk-your-key-here" > .env
+# Kod biçimlendirme
+./setup.sh format
 
-# 4. Çalıştır
-fably "bana bir kedi hikayesi anlat"
-
-# 5. Web arayüzü
-fably --web-interface
+# Kod kalite kontrolü
+./setup.sh check
 ```
 
-**Fably ile çocuklarınızın hayal dünyası sınırsız! 🎭✨**
+### **Proje Yapısı**
+```
+fably/
+├── fably/                    # Ana uygulama paketi
+│   ├── cli.py               # Komut satırı arayüzü
+│   ├── fably.py             # Temel hikaye mantığı
+│   ├── utils.py             # Yardımcı fonksiyonlar
+│   ├── voice_manager.py     # Ses tanıma sistemi
+│   ├── tts_service.py       # Metin-ses servisi
+│   └── sounds/              # Ses dosyaları
+├── tools/                   # Geliştirme araçları
+│   └── gradio_app/         # Web arayüzü
+├── servers/                 # Bağımsız sunucular
+├── tests/                  # Test suite
+├── setup.sh               # Komple kurulum scripti
+└── README.md              # Bu kılavuz
+```
 
-*Bu proje, çocukların güvenli bir şekilde teknoloji ile tanışması ve yaratıcılıklarını geliştirmesi amacıyla sevgiyle geliştirilmiştir.*
-# Debugging Mode
+## 🔧 Sorun Giderme
+
+### **Yaygın Sorunlar**
+
+#### **"API anahtarı bulunamadı"**
 ```bash
-# Enable verbose logging
-fably --debug "test story"
+# .env dosyasının varlığını ve doğru formatını kontrol et
+cat .env
+# Şunları içermeli: OPENAI_API_KEY=sk-anahtariniz
+```
 
-# Check system status
+#### **"Ses cihazı bulunamadı"**
+```bash
+# Mevcut ses cihazlarını listele
+python -c "import sounddevice; print(sounddevice.query_devices())"
+
+# Mikrofonu test et
+python tools/capture_voice_query.py
+```
+
+#### **"Ses komutları tanınmıyor"**
+```bash
+# Gürültü azaltma olmadan test et
+fably --loop
+
+# Gürültü hassasiyetini artır
+fably --noise-reduction --noise-sensitivity 3.0 --auto-calibrate --loop
+```
+
+#### **"Hikayeler yavaş üretiliyor"**
+```bash
+# Daha hızlı model kullan
+fably --model gpt-4o-mini "Hızlı hikaye"
+
+# Paragraf sayısını azalt
+fably --paragraphs 3 "Kısa hikaye"
+```
+
+### **Hata Ayıklama Modu**
+```bash
+# Ayrıntılı günlükleme etkinleştir
+fably --debug "test hikayesi"
+
+# Sistem durumunu kontrol et
 fably --system-info
-
-# Test individual components
-python -c "
-import fably.utils as utils
-utils.test_audio_devices()
-utils.test_api_connection()
-utils.test_voice_recognition()
-"
 ```
 
-### **Log Files**
+## 🎯 Örnek Kullanım
+
+### **Tipik Günlük Kullanım**
 ```bash
-# Application logs
-tail -f logs/fably.log
+# Sabah hikayesi
+fably "Günaydın hikayesi - neşeli bir hayvan macerası"
 
-# System service logs (Raspberry Pi)
-journalctl -u fably.service -f
+# Öğle sonrası
+fably --continue "sabah_hikayesi" "Kahramanımız yeni arkadaşlarla ne yapıyor?"
 
-# Web interface logs
-tail -f logs/gradio.log
+# Yatmadan önce
+fably --voice "openai:echo" --paragraphs 4 "Huzurlu uyku hikayesi"
 ```
 
-### **Performance Monitoring**
-```bash
-# Monitor system resources
-htop
-
-# Check audio levels
-alsamixer
-
-# Network diagnostics
-ping api.openai.com
-curl -I https://api.elevenlabs.io
-```
-
-## 📈 Usage Statistics & Analytics
-
-### **Story Analytics**
-```bash
-# View story statistics
-fably --stats
-
-# Export usage data
-fably --export-stats analytics.json
-
-# Story collection summary
-fably --collection-stats
-```
-
-### **Performance Metrics**
-- **Average Generation Time**: Track story creation speed
-- **Voice Recognition Accuracy**: Monitor input quality
-- **Audio Quality Scores**: Measure output clarity
-- **User Engagement**: Story completion rates
-
-## 🔒 Privacy & Security
-
-### **Data Handling**
-- ✅ **Local Storage**: All stories saved locally on device
-- ✅ **No Persistent Recording**: Voice data processed in real-time
-- ✅ **API Security**: Secure connections to AI providers
-- ✅ **Child Safety**: Content filtering for age-appropriate stories
-
-### **Privacy Controls**
-```bash
-# Offline mode (requires local models)
-fably --offline --model ollama:llama2
-
-# Clear all data
-fably --clear-all-data
-
-# Export data for backup
-fably --export-all backup.zip
-```
-
-### **Content Safety**
-- **Age-Appropriate Filtering**: Built-in content moderation
-- **Parental Controls**: Story review and approval system
-- **Safe Topics**: Curated prompt suggestions
-- **Educational Content**: Learning-focused story themes
-
-## 🌍 Internationalization
-
-### **Supported Languages**
-- 🇹🇷 **Turkish** (native, optimized)
-- 🇺🇸 **English** (full support)
-- 🇩🇪 **German** (experimental)
-- 🇫🇷 **French** (experimental)
-- 🇪🇸 **Spanish** (experimental)
-
-### **Language Configuration**
-```bash
-# Turkish stories (default)
-fably --language turkish "Bir kedi hikayesi anlat"
-
-# English stories
-fably --language english "Tell me a cat story"
-
-# Automatic language detection
-fably --auto-language "Tell me eine Geschichte"
-```
-
-## 🎓 Educational Integration
-
-### **Learning Themes**
-```bash
-# Educational story prompts
-fably "Teach me about the solar system through a story"
-fably "A story about friendship and sharing"
-fably "Adventure story that teaches counting"
-
-# Subject-specific content
-fably --theme science "Space exploration story"
-fably --theme history "Ancient Egyptian adventure"
-fably --theme nature "Forest ecosystem story"
-```
-
-### **Curriculum Support**
-- **STEAM Education**: Science, Technology, Engineering, Arts, Math
-- **Social Skills**: Friendship, empathy, cooperation
-- **Cultural Awareness**: World cultures and traditions
-- **Environmental Awareness**: Nature and conservation
-
-## 🚀 Advanced Features
-
-### **Voice Command Examples**
-```
-"Tell me a story about..."
-"Continue the story about the dragon"
-"Make it more exciting"
-"What happens next?"
-"Tell me a different ending"
-"Make the character a superhero"
-```
-
-### **Custom Voice Personalities**
-```bash
-# Configure character voices
-fably --character-voice "princess:elevenlabs:bella" 
-fably --character-voice "dragon:openai:onyx"
-fably --character-voice "narrator:elevenlabs:rachel"
-```
-
-### **Story Templates**
-```bash
-# Use predefined story structures
-fably --template "hero-journey" "brave young explorer"
-fably --template "fairy-tale" "magical forest adventure"
-fably --template "science-fiction" "space station mystery"
-```
-
-### **Interactive Story Choices**
-```bash
-# Enable choice-driven narratives
-fably --interactive "Adventure story where I can make choices"
-
-# Example interaction:
-# Fably: "Do you want to go left into the dark cave or right toward the bright meadow?"
-# Child: "Let's go to the meadow!"
-# Fably: continues story based on choice...
-```
-
-## 📦 Extensions & Plugins
-
-### **Available Extensions**
-- **🎵 Music Integration**: Background music for stories
-- **🎨 Image Generation**: Visual illustrations for stories
-- **📚 Library Integration**: Connect to digital book collections
-- **🎮 Game Integration**: Turn stories into interactive games
-
-### **Plugin Development**
-```python
-# Example plugin structure
-from fably.plugins import FablyPlugin
-
-class MusicPlugin(FablyPlugin):
-    def on_story_start(self, story_data):
-        # Add background music
-        pass
-    
-    def on_paragraph_complete(self, paragraph_data):
-        # Sync music with story beats
-        pass
-```
-
-## 🏆 Success Stories & Testimonials
-
-> *"Fably has transformed bedtime in our house. My 5-year-old daughter creates the most amazing adventures, and I'm always surprised by her creativity!"* - Parent from Istanbul
-
-> *"As a teacher, I use Fably to help children with language development. The interactive stories keep them engaged while learning new vocabulary."* - Elementary School Teacher
-
-> *"The noise reduction feature is incredible. Even with our TV on, Fably perfectly understands my son's voice commands."* - Tech Parent
-
-## 🗺️ Roadmap
-
-### **Q1 2025**
-- ✅ Multi-provider AI support (OpenAI, Gemini, DeepSeek)
-- ✅ Advanced noise reduction system
-- ✅ Voice cycling functionality
-- ✅ Enhanced web interface
-
-### **Q2 2025**
-- 🔄 Interactive story choices
-- 🔄 Character voice assignments
-- 🔄 Story branching and multiple endings
-- 🔄 Mobile app development
-
-### **Q3 2025**
-- 📅 Image generation integration
-- 📅 Music and sound effects
-- 📅 Multiplayer story creation
-- 📅 Educational curriculum integration
-
-### **Q4 2025**
-- 📅 Voice cloning for family members
-- 📅 AR/VR story visualization
-- 📅 Cloud synchronization option
-- 📅 Advanced parental controls
-
-## 🤝 Community & Support
-
-### **Getting Help**
-- 📖 **Documentation**: Complete guides in `/docs`
-- 💬 **Discussions**: GitHub Discussions for questions
-- 🐛 **Issues**: Bug reports and feature requests
-- 📧 **Direct Support**: Contact maintainers directly
-
-### **Community Contributions**
-- **Story Templates**: Share creative story structures
-- **Voice Packs**: Contribute new voice combinations
-- **Translations**: Help translate to new languages
-- **Hardware Guides**: Document new device setups
-
-### **Links**
-- 🏠 **Homepage**: [Fably Project](https://github.com/sarpel/fably)
-- 📚 **Documentation**: [docs/](docs/)
-- 🎥 **Video Tutorials**: [YouTube Channel](#)
-- 💬 **Community**: [Discord Server](#)
-
-## 📄 License & Credits
-
-### **License**
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-### **Credits & Acknowledgments**
-- **OpenAI** - GPT models and Whisper speech recognition
-- **Google** - Gemini AI and Cloud Speech API
-- **ElevenLabs** - Premium voice synthesis
-- **DeepSeek** - Affordable AI model access
-- **reSpeaker** - High-quality audio hardware
-- **Raspberry Pi Foundation** - Affordable computing platform
-
-### **Special Thanks**
-- All parents and children who tested early versions
-- The open-source community for inspiration and support
-- Contributors who helped improve documentation and features
-
-## 🎯 Project Philosophy
-
-**Fably** is built on the belief that technology should enhance human creativity, not replace it. Our goal is to provide children with a tool that:
-
-- 🌟 **Sparks Imagination**: Encourages creative thinking and storytelling
-- 🛡️ **Ensures Safety**: Provides a safe, controlled environment for AI interaction
-- 🎓 **Promotes Learning**: Integrates educational content naturally into play
-- 👨‍👩‍👧‍👦 **Strengthens Families**: Creates shared storytelling experiences
-- 🌍 **Respects Privacy**: Keeps personal data local and secure
+### **Web Arayüzü ile**
+1. `fably --web-app` ile başlat
+2. "Hikaye Üretimi" sekmesine git
+3. "Bir prenses ve sihirli kedi hikayesi" yaz
+4. Ses: "elevenlabs:rachel" seç
+5. "Hikaye Oluştur" butonuna bas
+6. Hikayeyi dinle ve keyif al!
 
 ---
 
-## 🚀 Quick Reference Card
+**Fably ile hayal dünyası sınırsız! 🎭✨**
 
-### **Essential Commands**
-```bash
-# Basic setup
-git clone https://github.com/sarpel/fably.git && cd fably && ./setup.sh
-
-# Single story
-fably "Tell me a story about adventures"
-
-# Interactive mode (recommended)
-fably --noise-reduction --auto-calibrate --voice-cycle --loop
-
-# Web interface
-fably --web-app
-
-# Continue story
-fably --continue "story_name" "What happens next?"
-
-# Help
-fably --help
-```
-
-### **Key Files**
-- `.env` - API keys and configuration
-- `fably/stories/` - Generated stories
-- `setup.sh` - Complete installation script
-- `README.md` - This comprehensive guide
-
-### **Support**
-- 📖 Read the [docs/](docs/) directory
-- 🐛 Report issues on GitHub
-- 💬 Join community discussions
-- 📧 Contact maintainers for help
-
----
-
-**Fably ile çocuklarınızın hayal dünyası sınırsız! 🎭✨**
-
-*This project is developed with love for children's safe interaction with technology and creativity development.*
+*Bu proje, 5 yaşındaki çocuğun güvenli teknoloji deneyimi ve yaratıcılığını geliştirmek amacıyla sevgiyle geliştirilmiştir.*

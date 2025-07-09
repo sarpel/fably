@@ -44,11 +44,11 @@ TTS_MODEL = "tts-1"
 TTS_VOICE = "nova"
 TTS_PROVIDER = "openai"
 TTS_FORMAT = "mp3"
-LANGUAGE = "tr"  # Türkçe varsayılan
+LANGUAGE = "tr"  # Sadece Türkçe
 BUTTON_GPIO_PIN = 17
 HOLD_TIME = 3
 SOUND_DRIVER = "alsa"
-QUERY_GUARD = "bana bir hikaye anlat"  # Turkce koruma ifadesi
+QUERY_GUARD = "bana bir hikaye anlat"  # Türkçe koruma ifadesi
 CONTINUATION_PATTERNS = [
     "hikayeye devam et", 
     "daha anlat", 
@@ -217,11 +217,6 @@ load_dotenv()
     help="Generate a preview audio sample for the specified voice and exit.",
 )
 @click.option(
-    "--language",
-    default=LANGUAGE,
-    help=f'The language to use when generating stories. Defaults to "{LANGUAGE}".',
-)
-@click.option(
     "--query-guard",
     default=QUERY_GUARD,
     help=f'The text each query has to start with. Defaults to "{QUERY_GUARD}".',
@@ -230,6 +225,32 @@ load_dotenv()
     "--continuation-patterns",
     default=",".join(CONTINUATION_PATTERNS),
     help=f'Comma-separated list of patterns that indicate story continuation requests. Defaults to "{",".join(CONTINUATION_PATTERNS)}".',
+)
+@click.option(
+    "--story-request",
+    help="Request a specific story topic or theme (e.g., 'space adventure', 'princess and dragon').",
+)
+@click.option(
+    "--gpio-button",
+    is_flag=True,
+    default=False,
+    help="Enable GPIO button as alternative to wakeword (acts like voice activation).",
+)
+@click.option(
+    "--wakeword-engine",
+    type=click.Choice(["ppn", "onnx", "tflite"], case_sensitive=False),
+    default=None,
+    help="Wakeword engine to use (ppn=Picovoice recommended for Pi Zero 2W).",
+)
+@click.option(
+    "--wakeword-model",
+    help="Path to wakeword model file (.ppn, .onnx, or .tflite).",
+)
+@click.option(
+    "--wakeword-sensitivity",
+    type=float,
+    default=0.5,
+    help="Wakeword detection sensitivity (0.0-1.0). Higher = more sensitive.",
 )
 @click.option(
     "--continue-story",
@@ -323,9 +344,13 @@ def cli(
     list_voices,
     voice_cycle,
     voice_preview,
-    language,
     query_guard,
     continuation_patterns,
+    story_request,
+    gpio_button,
+    wakeword_engine,
+    wakeword_model,
+    wakeword_sensitivity,
     continue_story,
     debug,
     ignore_cache,
@@ -366,9 +391,14 @@ def cli(
     ctx.tts_provider = tts_provider
     ctx.elevenlabs_url = elevenlabs_url
     ctx.voice_cycle = voice_cycle
-    ctx.language = language
+    ctx.language = LANGUAGE  # Sabit Türkçe
     ctx.query_guard = query_guard
     ctx.continuation_patterns = continuation_patterns.split(",") if continuation_patterns else CONTINUATION_PATTERNS
+    ctx.story_request = story_request
+    ctx.gpio_button = gpio_button
+    ctx.wakeword_engine = wakeword_engine
+    ctx.wakeword_model = wakeword_model
+    ctx.wakeword_sensitivity = wakeword_sensitivity
     ctx.continue_story = continue_story
     ctx.ignore_cache = ignore_cache
     ctx.debug = debug
