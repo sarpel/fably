@@ -1,0 +1,102 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fably"
+version = "1.0.0"
+description = "AI storyteller for children - Turkish language optimized for 5-year-old"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Fably Contributors", email = "fably@example.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Education",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "openai>=1.0.0",
+    "requests",
+    "click",
+    "python-dotenv",
+    "pyyaml",
+    "numpy",
+    "sounddevice",
+    "soundfile",
+    "vosk",
+    "pydub",
+    "aiohttp",
+    # Platform-specific dependencies
+    "apa102-pi; platform_machine=='armv7l' or platform_machine=='aarch64'",
+    "gpiozero; platform_machine=='armv7l' or platform_machine=='aarch64'",
+    "RPi.GPIO; platform_machine=='armv7l' or platform_machine=='aarch64'",
+    # Wakeword engines (optional, platform-specific)
+    "pvporcupine; platform_machine=='armv7l' or platform_machine=='aarch64'",
+    "onnxruntime; platform_machine!='armv7l'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "pylint",
+    "pytest",
+]
+wakeword = [
+    "pvporcupine",
+    "onnxruntime", 
+    "tflite-runtime",
+]
+web = [
+    "gradio",
+    "plotly",
+    "pandas",
+]
+
+[project.scripts]
+fably = "fably.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/sarpel/fably"
+Repository = "https://github.com/sarpel/fably"
+Issues = "https://github.com/sarpel/fably/issues"
+
+[tool.setuptools]
+packages = ["fably"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+fably = [
+    "sounds/*.wav",
+    "sounds/*.txt", 
+    "*.txt",
+    "examples/**/*",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py38']
+
+[tool.pylint.messages_control]
+disable = [
+    "missing-function-docstring",
+    "missing-module-docstring", 
+    "line-too-long",
+    "too-many-arguments",
+    "too-many-instance-attributes",
+    "too-many-locals",
+    "duplicate-code",
+]
+
+[tool.pylint.format]
+max-line-length = 120

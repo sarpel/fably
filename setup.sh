@@ -42,8 +42,24 @@ detect_system() {
     
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         if grep -q "Raspberry Pi" /proc/cpuinfo 2>/dev/null; then
-            SYSTEM="raspberry_pi"
-            log "Detected: Raspberry Pi OS"
+            # Detect specific Pi model
+            if grep -q "Pi 5" /proc/cpuinfo 2>/dev/null; then
+                SYSTEM="raspberry_pi5"
+                PI_MODEL="5"
+                log "Detected: Raspberry Pi 5"
+            elif grep -q "Pi 4" /proc/cpuinfo 2>/dev/null; then
+                SYSTEM="raspberry_pi4"
+                PI_MODEL="4"  
+                log "Detected: Raspberry Pi 4"
+            elif grep -q "Pi Zero 2" /proc/cpuinfo 2>/dev/null; then
+                SYSTEM="raspberry_pi_zero2w"
+                PI_MODEL="Zero 2W"
+                log "Detected: Raspberry Pi Zero 2W"
+            else
+                SYSTEM="raspberry_pi"
+                PI_MODEL="Unknown"
+                log "Detected: Raspberry Pi (model unknown)"
+            fi
         else
             SYSTEM="linux"
             log "Detected: Linux system"
@@ -75,11 +91,11 @@ install_system_packages() {
     header "Installing System Dependencies"
     
     case $SYSTEM in
-        "raspberry_pi"|"linux")
+        "raspberry_pi5"|"raspberry_pi4"|"raspberry_pi_zero2w"|"raspberry_pi")
             log "Updating package lists..."
             sudo apt update
             
-            log "Installing system packages..."
+            log "Installing system packages for Raspberry Pi..."
             sudo apt install -y \
                 git \
                 curl \
@@ -105,18 +121,24 @@ install_system_packages() {
                 espeak-data \
                 libespeak1 \
                 libespeak-dev \
-                libjack-jackd2-dev
+                libjack-jackd2-dev \
+                python3-gpiozero \
+                python3-rpi.gpio \
+                python3-bluez
             
-            if [[ $SYSTEM == "raspberry_pi" ]]; then
-                log "Installing Raspberry Pi specific packages..."
-                sudo apt install -y \
-                    python3-gpiozero \
-                    python3-rpi.gpio \
-                    python3-bluez \
-                    raspi-config
+            # Pi 5 specific optimizations
+            if [[ $SYSTEM == "raspberry_pi5" ]]; then
+                log "Applying Pi 5 specific optimizations..."
+                # Enable performance governor for better performance
+                echo 'GOVERNOR="performance"' | sudo tee -a /etc/default/cpufrequtils 2>/dev/null || true
+                
+                # Increase GPU memory split for better multimedia performance
+                if ! grep -q "gpu_mem=" /boot/firmware/config.txt 2>/dev/null; then
+                    echo "gpu_mem=128" | sudo tee -a /boot/firmware/config.txt 2>/dev/null || true
+                fi
             fi
             ;;
-        "macos")
+        "linux")
             if ! command -v brew &> /dev/null; then
                 error "Homebrew not found. Please install Homebrew first:"
                 error "  /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
@@ -195,31 +217,53 @@ install_python_dependencies() {
     
     # Install platform-specific packages
     case $SYSTEM in
-        "raspberry_pi")
+        "raspberry_pi5"|"raspberry_pi4"|"raspberry_pi_zero2w"|"raspberry_pi")
             log "Installing Raspberry Pi specific packages..."
             pip install \
                 apa102-pi \
                 gpiozero \
-                RPi.GPIO \
-                pvporcupine  # Wakeword for Pi (recommended)
+                RPi.GPIO
+            
+            # Install optimal wakeword engine based on Pi model
+            if [[ $SYSTEM == "raspberry_pi5" || $SYSTEM == "raspberry_pi4" ]]; then
+                log "Installing ONNX Runtime for Pi 4/5..."
+                pip install onnxruntime  # Pi 4/5 can handle ONNX well
+                
+                # Also install PPN as backup
+                if pip install pvporcupine 2>/dev/null; then
+                    log "PPN (Picovoice) also installed as backup"
+                fi
+            else
+                log "Installing PPN (Picovoice) for Pi Zero 2W..."
+                if pip install pvporcupine 2>/dev/null; then
+                    log "PPN (Picovoice) installed successfully"
+                else
+                    warn "PPN installation failed, installing ONNX as fallback"
+                    pip install onnxruntime
+                fi
+            fi
             ;;
         "linux")
             log "Installing Linux audio packages..."
             pip install \
                 pyaudio \
-                onnxruntime  # Wakeword for Linux
+                onnxruntime  # ONNX for generic Linux
             ;;
         "macos")
             log "Installing macOS audio packages..."
             pip install \
                 pyaudio \
-                onnxruntime  # Wakeword for macOS
+                onnxruntime  # ONNX for macOS
             ;;
     esac
     
-    # Install Fably in development mode
+    # Install Fably in development mode with modern setuptools
     log "Installing Fably in development mode..."
-    pip install --editable .
+    if [[ -f "pyproject.toml" ]]; then
+        pip install --editable . --use-pep517
+    else
+        pip install --editable .
+    fi
     
     log "Python dependencies installed successfully"
 }
@@ -229,11 +273,13 @@ install_python_dependencies() {
 # ================================================================================
 
 setup_raspberry_pi_hardware() {
-    if [[ $SYSTEM != "raspberry_pi" ]]; then
+    if [[ $SYSTEM != "raspberry_pi"* ]]; then
         return
     fi
     
     header "Raspberry Pi Hardware Setup"
+    
+    log "Detected Pi Model: $PI_MODEL"
     
     # Check if reSpeaker HAT is connected
     log "Checking for reSpeaker HAT..."
@@ -245,13 +291,16 @@ setup_raspberry_pi_hardware() {
         
         if [[ $install_respeaker == "y" || $install_respeaker == "Y" ]]; then
             install_respeaker_drivers
+        else
+            log "Skipping reSpeaker HAT driver installation"
+            log "You can use USB microphones or built-in audio instead"
         fi
     fi
     
     # Enable SPI and I2C
     log "Enabling SPI and I2C interfaces..."
-    sudo raspi-config nonint do_spi 0
-    sudo raspi-config nonint do_i2c 0
+    sudo raspi-config nonint do_spi 0 2>/dev/null || true
+    sudo raspi-config nonint do_i2c 0 2>/dev/null || true
     
     # Configure audio settings
     configure_audio_settings
@@ -292,8 +341,19 @@ install_respeaker_drivers() {
 configure_audio_settings() {
     log "Configuring audio settings..."
     
+    # Check if we have write permission to home directory
+    if [[ ! -w "$HOME" ]]; then
+        warn "No write permission to home directory, trying with sudo..."
+        ASOUND_PATH="/home/$USER/.asoundrc"
+        sudo touch "$ASOUND_PATH"
+        sudo chown "$USER:$USER" "$ASOUND_PATH"
+    else
+        ASOUND_PATH="$HOME/.asoundrc"
+    fi
+    
     # Create ALSA configuration for optimal audio
-    cat > ~/.asoundrc << 'EOF'
+    log "Creating ALSA configuration at $ASOUND_PATH..."
+    cat > "$ASOUND_PATH" << 'EOF'
 pcm.!default {
     type asym
     playback.pcm "plughw:seeed2micvoicec,0"
@@ -305,11 +365,18 @@ ctl.!default {
 }
 EOF
     
-    # Set audio levels
+    # Set correct permissions
+    chmod 644 "$ASOUND_PATH"
+    
+    # Set audio levels if amixer is available and device exists
     if command -v amixer &> /dev/null; then
-        log "Setting optimal audio levels..."
-        amixer -c seeed2micvoicec set 'Headphone' 80%
-        amixer -c seeed2micvoicec set 'Speaker' 80%
+        if amixer -c seeed2micvoicec info &> /dev/null; then
+            log "Setting optimal audio levels..."
+            amixer -c seeed2micvoicec set 'Headphone' 80% 2>/dev/null || true
+            amixer -c seeed2micvoicec set 'Speaker' 80% 2>/dev/null || true
+        else
+            log "reSpeaker HAT not detected in ALSA, skipping audio level setup"
+        fi
     fi
 }
 
