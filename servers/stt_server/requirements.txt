@@ -1,0 +1,4 @@
+click
+flask
+faster-whisper
+soundfile
