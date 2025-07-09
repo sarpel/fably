@@ -1,370 +1,564 @@
-# Fably
+# 📚 Fably - Yapay Zeka Hikaye Anlatıcısı
 
-Use AI to generate and tell bedtime stories to kids.
+> 5 yaşındaki Türk çocukları için özel olarak tasarlanmış yapay zeka destekli hikaye anlatıcısı
 
-Run it on your computer or on very cheap (<50$) hardware.
+Fably, çocukların hayal gücünü geliştiren, güvenli ve eğitici hikayeler oluşturan gelişmiş bir AI sistemidir. Raspberry Pi'da çalışacak şekilde optimize edilmiş, tamamen Türkçe dil desteği sunan ve çoklu AI provider entegrasyonu içeren modern bir hikaye anlatıcısıdır.
 
-<img src="https://raw.githubusercontent.com/stefanom/fably/main/images/fably.webp" alt="Fably" width="500" height="500"/>
+## 🌟 Temel Özellikler
 
-Watch Fably running on a Raspberry PI Zero 2W below:
+### 🎯 Çocuk Odaklı Tasarım
+- **5 yaş grubu için optimize** - Yaş grubuna uygun kelime dağarcığı ve anlatım
+- **Tamamen güvenli içerik** - Şiddet, korku ve uygunsuz içerik filtresi
+- **Türk kültürü uyumlu** - Türk isimleri, değerleri ve kültürel öğeler
+- **Eğitici değerler** - Dostluk, paylaşma, dürüstlük gibi değerleri öğretir
 
-[![Fably running on a Raspberry PI Zero 2W](https://raw.githubusercontent.com/stefanom/fably/main/images/video_screenshot.png)](https://www.youtube.com/watch?v=zILPuh84OcY "Fably running on a Raspberry PI Zero 2W")
+### 🤖 Gelişmiş AI Entegrasyonu
+- **Çoklu LLM Desteği**: OpenAI GPT-4o, Google Gemini, Deepseek
+- **Akıllı STT**: OpenAI Whisper, Google Cloud Speech, Local Whisper
+- **Kaliteli TTS**: OpenAI sesler, ElevenLabs premium sesler
+- **Ses Kalitesi**: Gürültü azaltma, otomatik kalibrasyon
 
-## Installation
+### 🎨 Modern Kullanıcı Arayüzü
+- **Gelişmiş Web Arayüzü**: Modern, responsive Gradio tabanlı
+- **Light/Dark Mode**: Tema değiştirme desteği
+- **Canlı İzleme**: Sistem metrikleri, CPU/RAM/disk takibi
+- **Live Loglar**: Gerçek zamanlı sistem günlükleri
+- **Mobil Uyumlu**: Tablet ve telefon desteği
 
-All you need to get started is a computer (doesn't matter which operating system) with:
+### 🔧 Donanım ve Sistem
+- **Raspberry Pi Optimize**: Pi Zero 2W ve Pi 5 desteği
+- **Düşük Kaynak**: 512MB RAM'de çalışır
+- **GPIO Desteği**: Düğme kontrolü, LED feedback
+- **Ses İşleme**: Gelişmiş gürültü azaltma algoritmaları
 
-* python installed
-* git installed
-* a speaker
+## 🚀 Hızlı Başlangıç
 
-type this into your command line
+### Kurulum
 
-```sh
+1. **Repository'yi klonlayın:**
+```bash
 git clone https://github.com/stefanom/fably.git
 cd fably
+```
+
+2. **Bağımlılıkları yükleyin:**
+```bash
+python -m venv fably-env
+source fably-env/bin/activate  # Linux/Mac
+# veya
+fably-env\Scripts\activate  # Windows
+
 pip install --editable .
 ```
 
-### Listening to examples
-
-In the `example` folder, there are several examples of generated stories along with the synthetized speech. You can listen to them directly here from github or you can run the following command to run use Fably itself to tell the story already generated
-
-```sh
-fably --stories-path=examples/openai_expensive "Tell me a story about a princess and a frog" 
-```
-
-will play a story that's already generated. Look in the [examples](https://github.com/stefanom/fably/tree/main/fably/examples) folder to see which other stories can be told without requiring an OpenAI key.
-
-### Setting up the OpenAI Key
-
-To enable Fably to tell new stories, we need an OpenAI API key. Go to https://platform.openai.com/api-keys to obtain one.
-
-NOTE: OpenAI might require you to enter a credit card to obtain an API key. You will be responsible to pay for the usage of these computationally demanding API calls.
-
-Once you have the key run this command in Windows
-
-```sh
-copy env.example .env
-```
-
-or this command in MacOS/Linux
-
-```sh
-cp env.example .env
-```
-
-and add your OpenAI key in that file.
-
-### Telling a new story
-
-For this, we'll need to have a microphone available to our computer. Run this command to have fably listen to your voice query and tell you a story:
-
-```bash
-fably 
-```
-
-Once Fably is done introducing itself, say out loud "tell me a story about a dog" (or whatever story you want. Just make sure to start with "tell me a story" as Fably will not repsond to any other query) and let Fably do its magic.
-
-## Installing on a RaspberryPI
-
-We will need:
-
-* a Raspberry Pi (at least a Zero 2w)
-* a mic hat (as the zero doesn't a mic nor USB ports). I tried it with both these sounds cards:
-  * [ReSpeaker HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/)
-  * [WM8960 Audio HAT](https://www.waveshare.com/wm8960-audio-hat.htm)
-* a power supply
-* a wired speaker
-
-### Phase 1 - Install Raspian on the rPI
-
-To install the OS we recommend using the official installer located at https://www.raspberrypi.com/software/.
-
-The best choice is the "Raspberry Pi OS (legacy, 64-bit) Lite" which contains the bare minimum to get us going but consumes the least amount of resources and contains the minimum amount of attack surface.
-
-Make sure to follow the advanced options that allow us to setup our rpi with things like hostname, wifi password and enable the ssh server so that we don't need keyboards and monitors to connect to it, we can just do it from our regular computer.
-
-Once we are able to ssh into the device, we're ready for the next step.
-
-### Phase 2 - Update the OS installation
-
-Log into the RPI via SSH and type
-
-```bash
-sudo apt update
-sudo apt upgrade -y
-sudo reboot
-```
-
-Rebooting is not needed every time but it's safer in case the Linux kernel has been upgraded.
-
-### Phase 3 - Install the stuff that Fably needs
-
-Log into the RPI via SSH and type
-
-```bash
-sudo apt install -y \
-    git \
-    mpg123 \
-    libportaudio2 \
-    libsndfile1 \
-    python3-venv \
-    python3-pip \
-    python3-scipy \
-    python3-numpy \
-    python3-pydub \
-    python3-gpiozero \
-    python3-bluez
-```
-
-When this is done, create a python environment for Fably (the Raspberry OS is very picky about not letting you install pip without using virtual environments for Python):
-
-```bash
-python -m venv --system-site-packages .venv
-source .venv/bin/activate
-```
-
-### Phase 4 - Install Fably
-
-Type
-
-```bash
-git clone git@github.com:stefanom/fably.git
-cd fably
-pip install --editable .
-```
-
-and make sure that Fably works as intended by typing
-
-```bash
-fably --help
-```
-
-### Phase 5 - Configure the OpenAPI api key
-
-If you haven't done so already, go to https://platform.openai.com/api-keys to obtain your API key.
-
+3. **API anahtarlarını ayarlayın:**
 ```bash
 cp env.example .env
-echo <your_api_key> >> .env
+# .env dosyasını düzenleyerek API anahtarlarınızı ekleyin
 ```
 
-### Phase 6.a - Install drivers for the [ReSpeaker HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/)
+### Temel Kullanım
 
-Skip this section if that's not the sound card that you have.
-
-First we download the source code for the HAT drivers
-
+**Komut satırından hikaye oluşturma:**
 ```bash
-git clone https://github.com/HinTak/seeed-voicecard
-cd seeed-voicecard
+fably "bana bir prenses hikayesi anlat"
 ```
 
-then we switch to the git branch of the kernel we're currently using
-
+**Web arayüzünü başlatma:**
 ```bash
-uname_r=$(uname -r)
-version=$(echo "$uname_r" | sed 's/\([0-9]*\.[0-9]*\).*/\1/')
-git checkout v$version
+fably --web-interface
+# Tarayıcıda http://localhost:7860 adresine gidin
 ```
 
-at this point we're ready to make the driver, install it and reboot
-
+**Gelişmiş seçeneklerle:**
 ```bash
-sudo ./install.sh
-sudo reboot
+fably --llm-provider gemini \
+      --tts-provider elevenlabs \
+      --noise-reduction \
+      --auto-calibrate \
+      --loop
 ```
 
-Then log back into the RPI after it reboots and then type
+## ⚙️ Konfigürasyon
 
+### API Anahtarları
+
+`.env` dosyasında gerekli API anahtarlarını ayarlayın:
+
+```env
+# OpenAI (zorunlu - temel LLM ve TTS için)
+OPENAI_API_KEY=sk-...
+
+# Google Gemini (opsiyonel - gelişmiş LLM için)
+GEMINI_API_KEY=AI...
+
+# Deepseek (opsiyonel - alternatif LLM için)
+DEEPSEEK_API_KEY=sk-...
+
+# ElevenLabs (opsiyonel - premium TTS için)
+ELEVENLABS_API_KEY=...
+
+# Google Cloud (opsiyonel - gelişmiş STT için)
+GOOGLE_CLOUD_API_KEY=...
+GOOGLE_PROJECT_ID=your-project-id
+```
+
+### Provider Seçenekleri
+
+#### LLM (Language Model) Sağlayıcıları:
+- **OpenAI**: `gpt-4o`, `gpt-4o-mini`, `gpt-3.5-turbo`
+- **Google Gemini**: `gemini-1.5-pro`, `gemini-1.5-flash`, `gemini-pro`
+- **Deepseek**: `deepseek-chat`, `deepseek-coder`
+
+#### STT (Speech-to-Text) Sağlayıcıları:
+- **OpenAI Whisper**: Cloud tabanlı, hızlı
+- **Google Cloud Speech**: Yüksek doğruluk, Türkçe optimize
+- **Local Whisper**: Offline çalışma, gizlilik
+
+#### TTS (Text-to-Speech) Sağlayıcıları:
+- **OpenAI**: `nova`, `alloy`, `echo`, `fable`, `onyx`, `shimmer`
+- **ElevenLabs**: Premium kalitede, çeşitli sesler
+
+## 🎮 Kullanım Senaryoları
+
+### 1. Basit Hikaye Anlatımı
 ```bash
-arecord -l
+# OpenAI ile basit kullanım
+fably "bana bir kedi hikayesi anlat"
 ```
 
-and we should see something like this
-
-```txt
-**** List of CAPTURE Hardware Devices ****
-card 3: seeed2micvoicec [seeed-2mic-voicecard], device 0: fe203000.i2s-wm8960-hifi wm8960-hifi-0 [fe203000.i2s-wm8960-hifi wm8960-hifi-0]
-  Subdevices: 1/1
-  Subdevice #0: subdevice #0
-```
-
-we can test the card by playing a sound like this
-
+### 2. Premium Kalite
 ```bash
-aplay /usr/share/sounds/alsa/Front_Center.wav
+# Gemini LLM + ElevenLabs TTS
+fably --llm-provider gemini \
+      --tts-provider elevenlabs \
+      "bana bir macera hikayesi anlat"
 ```
 
-### Phase 6.b - Install drivers for the [WM8960 Audio HAT](https://www.waveshare.com/wm8960-audio-hat.htm)
-
-Skip this section if that's not the sound card that you have.
-
-First we download the source code for the HAT drivers
-
+### 3. Offline Çalışma
 ```bash
-git clone https://github.com/waveshare/WM8960-Audio-HAT
-cd WM8960-Audio-HAT
+# Tamamen yerel modeller
+fably --stt-provider local_whisper \
+      --local-whisper-model base \
+      --loop
 ```
 
-then we build and install the drivers
-
+### 4. Gürültülü Ortam
 ```bash
-sudo ./install.sh
-sudo reboot
+# Gelişmiş ses işleme
+fably --noise-reduction \
+      --noise-sensitivity 1.5 \
+      --auto-calibrate \
+      --calibration-duration 5.0
 ```
 
-Then log back into the RPI after it reboots and then type
-
+### 5. Ses Değiştirme Modu
 ```bash
-sudo dkms status
+# Düğme ile ses değiştirme
+fably --voice-cycle --loop
+# Çift tıklama ile sesler arasında geçiş
 ```
 
-and we should be seeing something like this:
+## 📱 Web Arayüzü Özellikleri
 
-```txt
-wm8960-soundcard, 1.0, 4.19.58-v7l+, armv7l: installed
-```
+Web arayüzünü `fably --web-interface` ile başlatın ve aşağıdaki özelliklerden yararlanın:
 
-then typing
+### 📖 Hikaye Kütüphanesi
+- Mevcut hikayeleri görüntüleme ve düzenleme
+- Paragraf bazında düzenleme
+- Ses yeniden oluşturma
+- Hikaye devam ettirme
 
+### ✨ Yeni Hikaye Oluşturma
+- Sesli veya yazılı talep
+- Provider ve model seçimi
+- Gerçek zamanlı hikaye oluşturma
+- Ses sentezi ve kaydetme
+
+### 📚 Koleksiyonlar
+- Hikaye arama ve filtreleme
+- İstatistikler ve analizler
+- Toplu işlemler
+- Dışa aktarma
+
+### ⚙️ Ayarlar
+- API anahtarı yönetimi
+- Provider konfigürasyonu
+- Ses kalitesi ayarları
+- Sistem parametreleri
+
+### 🔧 Sistem İzleme
+- CPU, RAM, disk kullanımı
+- Sıcaklık monitörü
+- Gerçek zamanlı grafikler
+- Performance metrikleri
+
+### 📋 Canlı Günlükler
+- Gerçek zamanlı log akışı
+- Log seviyesi filtreleme
+- Hata takibi
+- Sistem durumu
+
+### 🎨 Tema Desteği
+- Light/Dark mode toggle
+- Modern, responsive tasarım
+- Mobil cihaz uyumluluğu
+- Accessibility desteği
+
+## 🔧 Raspberry Pi Kurulumu
+
+### Otomatik Kurulum (Önerilen)
 ```bash
-arecord -l
+# Tüm bağımlılıkları otomatik yükler
+chmod +x setup.sh
+./setup.sh
 ```
 
-and we should be seeing something like this
-
-```txt
-**** List of CAPTURE Hardware Devices ****
-card 0: wm8960soundcard [wm8960-soundcard], device 0: bcm2835-i2s-wm8960-hifi wm8960-hifi-0 []
-  Subdevices: 1/1
-  Subdevice #0: subdevice #0
-```
-
-we can test the card by playing a sound like this
-
+### Systemd Servisi Kurulumu
 ```bash
-aplay /usr/share/sounds/alsa/Front_Center.wav
-```
-
-### Phase 7 - Make Fably start when the RPI starts
-
-```bash
-sudo cp ./install/rpi/fably.service /etc/systemd/system/fably.service
+# Otomatik başlatma için
+sudo cp install/rpi/fably.service /etc/systemd/system/
 sudo systemctl enable fably.service
-sudo reboot
+sudo systemctl start fably.service
+
+# Durum kontrolü
+sudo systemctl status fably.service
 ```
 
-Your RPI should start by speaking to you!
+### Donanım Gereksinimleri
 
-## Getting it to work with locally hosted models
+#### Raspberry Pi Zero 2W (Minimum)
+- **RAM**: 512MB
+- **CPU**: Quad-core ARM Cortex-A53
+- **Storage**: 16GB microSD (Class 10)
+- **Audio**: USB Audio Adapter
+- **Network**: WiFi
 
-WARNING: this is new functionality that is not well tested yet! Use at your own risk!
+#### Raspberry Pi 5 (Önerilen)
+- **RAM**: 8GB
+- **CPU**: Quad-core ARM Cortex-A76
+- **Storage**: 32GB microSD (A2 sınıfı)
+- **Audio**: USB Audio / HAT
+- **Cooling**: Aktif soğutma
 
-If we want to use Fably with locally hosted models (for costs or privacy reasons or both), we can do so by following these steps.
+### Ses Donanımı
+- **Mikrofon**: USB mikrofon veya HAT
+- **Hoparlör**: 3.5mm veya USB hoparlör
+- **Önerilen**: Waveshare USB Audio Adapter
 
-1. Install [Ollama](https://ollama.com/)
-2. Download whatever model we want (I'd suggest to start with [LLama3:7b](https://ollama.com/library/llama3) to try it out)
-3. Pass the URL to Ollama's endpoint as a parameter to Fably with `--llm-url` when [starting it](https://github.com/stefanom/fably/blob/main/startup/start_fably.sh).
-4. Make sure that the Ollama endpoint is accessible from the RPI.
+## 🎛️ Gelişmiş Özellikler
 
-CAUTION: Ollama default host is 127.0.0.1 which means it will only respond to requests coming from the same machine. We need to change `OLLAMA_HOST` environment to be `0.0.0.0` instead to imply that it should respond to requests coming from other machines as well.
+### Ses Kalitesi Optimizasyonu
 
-## Having Fably staying up-to-date
+**Gürültü Azaltma:**
+```bash
+fably --noise-reduction \
+      --noise-sensitivity 2.5 \
+      --auto-calibrate \
+      --calibration-duration 4.0
+```
 
-Here is how you can automate Fably staying up to date with the latest security patches and bug fixes.
+**Parametreler:**
+- `--noise-sensitivity`: 0.1-10.0 (yüksek = daha hassas)
+- `--calibration-duration`: 1.0-10.0 saniye
+- `--auto-calibrate`: Otomatik ortam gürültüsü ölçümü
 
-1. Install `unattended-upgrades` package:
+### Ses Döngüsü (Voice Cycling)
+```bash
+# Düğme ile ses değiştirme
+fably --voice-cycle --loop
 
-   ```bash
-   apt install unattended-upgrades
-   ```
+# Düğmeye çift tıklayarak sesler arasında geçiş yapın
+```
 
-2. Add Raspberry Pi Foundation sources to `unattended-upgrades` config:
+### Hikaye Devam Ettirme
+```bash
+# Mevcut hikayeye devam et
+fably --continue-story "prenses" "ejderle karşılaştığında ne oldu?"
+```
 
-   ```conf
-    # /etc/apt/apt.conf.d/50unattended-upgrades
+### Provider Testleri
+```bash
+# Tüm provider'ları test et
+fably --test-providers
+
+# Mevcut sesleri listele
+faby --list-voices
+
+# Ses önizlemesi
+fably --voice-preview "nova"
+```
+
+## 🔒 Güvenlik ve Gizlilik
+
+### Çocuk Güvenliği
+- **İçerik Filtresi**: Otomatik şiddet/korku tespiti
+- **Kültürel Uyum**: Türk değerleri ve aile yapısı
+- **Yaş Uygunluk**: 5 yaş seviyesinde kelime seçimi
+- **Pozitif Mesajlar**: Her hikaye öğretici değerler içerir
+
+### Veri Güvenliği
+- **Yerel İşleme**: Ses kayıtları cihazda kalır
+- **Şifreli Bağlantı**: API çağrıları HTTPS ile
+- **Veri Saklama**: Hikayeler yerel olarak saklanır
+- **Gizlilik**: Kişisel veri paylaşımı yok
+
+### Offline Çalışma
+```bash
+# Tamamen offline mod
+fably --stt-provider local_whisper \
+      --llm-provider ollama \
+      --local-whisper-model base
+```
+
+## 📊 Performans ve Optimizasyon
+
+### Bellek Kullanımı
+- **Pi Zero 2W**: ~300MB RAM kullanımı
+- **Pi 5**: ~1GB RAM kullanımı (gelişmiş özelliklerle)
+- **Optimizasyon**: Model boyutu ayarlanabilir
+
+### Response Süreleri
+- **STT**: 1-3 saniye (ses uzunluğuna bağlı)
+- **LLM**: 5-15 saniye (model ve token sayısına bağlı)
+- **TTS**: 2-5 saniye (metin uzunluğuna bağlı)
+- **Toplam**: 8-23 saniye (end-to-end)
+
+### Optimizasyon İpuçları
+
+**Hız için:**
+```bash
+fably --llm-model gpt-3.5-turbo \
+      --max-tokens 1000 \
+      --tts-provider openai
+```
+
+**Kalite için:**
+```bash
+fably --llm-provider gemini \
+      --llm-model gemini-1.5-pro \
+      --tts-provider elevenlabs \
+      --max-tokens 2000
+```
+
+**Düşük kaynak için:**
+```bash
+fably --local-whisper-model tiny \
+      --max-tokens 800 \
+      --noise-reduction false
+```
+
+## 🛠️ Geliştirme
+
+### Kod Kalitesi
+```bash
+# Kod formatlama
+./format.sh
+
+# Lint kontrolleri
+./check.sh
+
+# Tüm kontroller
+./push.sh "commit mesajı"
+```
+
+### Test Etme
+```bash
+# Unit testler
+python -m pytest tests/ -v
+
+# Entegrasyon testleri
+python tests/test_asyncio.py
+
+# Ses testleri
+python tools/capture_voice_query.py
+python tools/mic_spectrogram.py
+```
+
+### Custom Provider Ekleme
+
+Yeni bir LLM provider eklemek için `fably/llm_service.py` dosyasına:
+
+```python
+class CustomLLMProvider(LLMProvider):
+    def __init__(self, api_key: str, base_url: str):
+        super().__init__("Custom", api_key, base_url)
     
-    Unattended-Upgrade::Origins-Pattern {
-        ...
-        "origin=Raspbian,codename=${distro_codename},label=Raspbian";
-        "origin=Raspberry Pi Foundation,codename=${distro_codename},label=Raspberry Pi Foundation";
-    };
-   ```
-
-3. After `unattended-upgrades` logs are produced, you can verify the new sources are picked up for updates in `/var/log/unattended-upgrades/unattended-upgrades.log`.
-
-## Under the hood
-
-This section contains information on how Fably works.
-
-The most naive implementation would chain the calls to the cloud API calls like this:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    Thread->>LLM: Make me a story
-    activate LLM 
-    LLM->>Thread: Here is there story
-    deactivate LLM
-    Thread->>TTS: Convert it to audio
-    activate TTS
-    TTS->>Thread: Here is the audio
-    deactivate TTS
-    Thread->>Speaker: Play the audio
-    activate Speaker
-    Speaker->>Thread: Done
-    deactivate Speaker
+    async def generate_story(self, prompt: str, **kwargs):
+        # Kendi implementasyonunuz
+        pass
 ```
 
-But this would be a terrible experience because of the very high latency: it would take a long time (potentially minutes!) before the kid hears anything coming out of the speaker. They would likely lose interest or think it's broken and call their parents. Clearly, the opposite of what we would want with a tool like this.
+## 📈 İzleme ve Log
 
-Luckily, modern GenAI cloud API offer a "streaming" option that allows us to receive content as soon as it's generated. With that, and the help of some asynchronous programming, we can turn the program sequence into something like this
+### Sistem Logları
+```bash
+# Systemd logları
+journalctl -u fably.service -f
 
-```mermaid
-sequenceDiagram
-    autonumber
-    Thread->>LLM: Make me a story
-    activate LLM 
-    LLM->>Thread: first paragraph
-    Thread->>TTS: Convert the first paragraph to audio
-    activate TTS
-    TTS->>Thread: audio of the first paragraph
-    deactivate TTS
-    Thread->>Speaker: Play the audio of the first paragraph
-    activate Speaker
-    LLM->>Thread: second paragraph
-    Thread->>TTS: Convert the second paragraph to audio
-    activate TTS
-    TTS->>Thread: audio of the second paragraph
-    deactivate TTS
-    Speaker->>Thread: Done
-    deactivate Speaker
-    Thread->>Speaker: Play the audio of the second paragraph
-    activate Speaker
-    Speaker->>Thread: Done
-    deactivate Speaker
+# Debug modu
+fably --debug --loop
+
+# Performans testi
+python tools/performance_test.py
 ```
 
-in which we are able to send the audio to the TTS service before the LLM service has finished executing. This saves time because we can start processing the audio while the rest of the story is being generated.
+### Web Arayüzü İzleme
+- Gerçek zamanlı CPU/RAM/disk grafikler
+- Live log akışı
+- Provider durumu
+- Ses kalitesi metrikleri
 
-There are more things we need to consider though:
+## 🔄 Güncelleme
 
-* a text-to-speech model works better if it has complete sentences to work with. It needs to read ahead to understand where to put enphasis. We could, conceivably, send individual words to it but the quality of the synthetized speech would be much worse and likely incur in a lot of network overhead. One happy medium is to stream enough content to obtain a paragraph and then send that out as our unit of discourse. It increases the "time to first sound" a little but it results in much better quality of the resulting audio.
-* high quality text-to-speech services are computational expensive and OpenAI greatly limits the number of concurrent requests coming from the same organization (3 in one minute, at the time of writing). This means that we can't just fire new TTS requests each time we get a new paragraph: we need to gate the number of concurrent TTS requests in flight.
+### Otomatik Güncelleme
+```bash
+./update.sh
+```
 
-Luckily for us, high quality TTS audio is generally well enunciated and that takes time to play back. This give us plenty of time to obtain a new paragraph and send it off to the TSS service before the previous one has finished playing. This gives the listener the perception of a quick response and no pauses between paragraphs, even if the components of the audio stream are being assembled in flight behind the scenes.
+### Manuel Güncelleme
+```bash
+git pull origin main
+pip install --editable . --upgrade
+sudo systemctl restart fably.service
+```
 
-## Roadmap
+## 🐛 Sorun Giderme
 
-### Short term
+### Yaygın Problemler
 
-* make sure that it works with the WM8960 Audio HAT
-* make the query guard system more sophisticated
-* look into ways to make the stories more divergent (is increasing temp enough?)
+**1. API Anahtarı Hatası:**
+```
+ValueError: OPENAI_API_KEY environment variable not set
+```
+**Çözüm:** `.env` dosyasında API anahtarınızı kontrol edin.
 
-### Longer term
+**2. Ses Cihazı Bulunamadı:**
+```bash
+# Ses cihazlarını listele
+python tools/list_sound_devices.py
 
-* get it to work on ESP32-based boards
-* get it to work with other AI cloud APIs
+# ALSA ayarları (Raspberry Pi)
+sudo raspi-config  # Advanced Options > Audio
+```
+
+**3. Permission Hatası (GPIO):**
+```bash
+sudo usermod -a -G gpio $USER
+# Oturumu yeniden başlatın
+```
+
+**4. Düşük Ses Kalitesi:**
+```bash
+# Gürültü tabanı ölçümü
+python tools/noise_floor.py
+
+# Mikrofon test
+python tools/mic_spectrogram.py
+
+# Gelişmiş ses filtresi
+fably --noise-reduction --auto-calibrate --debug
+```
+
+**5. Yavaş Response:**
+```bash
+# Lightweight modeller kullanın
+fably --llm-model gpt-3.5-turbo \
+      --local-whisper-model tiny \
+      --max-tokens 1000
+```
+
+### Debug Komutları
+```bash
+# Provider bağlantı testleri
+fably --test-providers
+
+# Ses önizleme
+fably --voice-preview nova
+
+# Sistem durumu
+htop
+vcgencmd measure_temp  # Raspberry Pi sıcaklık
+```
+
+## 📞 Destek ve Topluluk
+
+### Topluluk Kaynakları
+- **GitHub Issues**: [Sorun bildirimi](https://github.com/stefanom/fably/issues)
+- **Discussions**: [Topluluk forumu](https://github.com/stefanom/fably/discussions)
+- **Wiki**: [Detaylı dokümantasyon](https://github.com/stefanom/fably/wiki)
+
+### Katkıda Bulunma
+1. Fork edin ve klonlayın
+2. Feature branch oluşturun (`git checkout -b yeni-ozellik`)
+3. Değişikliklerinizi commit edin (`git commit -am 'feat: yeni özellik'`)
+4. Branch'i push edin (`git push origin yeni-ozellik`)
+5. Pull Request oluşturun
+
+### Dokümantasyon
+- **Installation Guide**: [Kurulum rehberi](docs/installation.md)
+- **API Reference**: [API dokümantasyonu](docs/api.md)
+- **Hardware Guide**: [Donanım kılavuzu](docs/hardware.md)
+- **Troubleshooting**: [Sorun giderme](docs/troubleshooting.md)
+
+## 📝 Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+
+## 🙏 Teşekkürler
+
+Fably projesi aşağıdaki açık kaynak projelerin desteğiyle geliştirilmektedir:
+
+- **OpenAI**: GPT modelleri ve Whisper STT
+- **Google**: Gemini AI ve Cloud Speech API
+- **Deepseek**: Açık kaynak LLM modelleri
+- **ElevenLabs**: Kaliteli TTS servisleri
+- **Gradio**: Modern web arayüzü framework
+- **Raspberry Pi Foundation**: Uygun fiyatlı donanım platformu
+
+## 🚀 Roadmap
+
+### v2.0 (Yakında)
+- [ ] Çoklu dil desteği (İngilizce, Arapça)
+- [ ] Görsel hikaye desteği (DALL-E entegrasyonu)
+- [ ] Sesli etkileşim (soru-cevap diyalogları)
+- [ ] Ebeveyn dashboard ve kontrol paneli
+- [ ] Hikaye kişiselleştirme (çocuğun ismini kullanma)
+
+### v2.1
+- [ ] Çocuk profilleri ve tercihleri
+- [ ] İlerleme takibi ve başarı rozetleri
+- [ ] Gamification öğeleri
+- [ ] Sosyal paylaşım (güvenli)
+
+### v3.0
+- [ ] AR/VR entegrasyonu
+- [ ] Çoklu karakter sesleri
+- [ ] İnteraktif hikayeler (seçim yapma)
+- [ ] AI öğretmen asistanı
+
+---
+
+## 🌈 Hızlı Başlangıç Özeti
+
+```bash
+# 1. Klonla
+git clone https://github.com/stefanom/fably.git && cd fably
+
+# 2. Kur
+python -m venv fably-env && source fably-env/bin/activate
+pip install --editable .
+
+# 3. API anahtarını ayarla
+echo "OPENAI_API_KEY=sk-your-key-here" > .env
+
+# 4. Çalıştır
+fably "bana bir kedi hikayesi anlat"
+
+# 5. Web arayüzü
+fably --web-interface
+```
+
+**Fably ile çocuklarınızın hayal dünyası sınırsız! 🎭✨**
+
+*Bu proje, çocukların güvenli bir şekilde teknoloji ile tanışması ve yaratıcılıklarını geliştirmesi amacıyla sevgiyle geliştirilmiştir.*
