@@ -1,2 +1,74 @@
-# Auto detect text files and perform LF normalization
+# Windows/Linux Cross-Platform Git Configuration
+
+# Ensure consistent line endings across platforms
 * text=auto
+
+# Python files should always use LF line endings
+*.py text eol=lf
+*.sh text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.env text eol=lf
+
+# Executable files for different platforms
+*.sh text eol=lf
+setup.sh text eol=lf
+format.sh text eol=lf
+check.sh text eol=lf
+push.sh text eol=lf
+update.sh text eol=lf
+
+# Windows batch files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.wav binary
+*.mp3 binary
+*.mp4 binary
+*.avi binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.so binary
+*.dll binary
+*.exe binary
+
+# Audio files for Fably
+sounds/*.wav binary
+sounds/*.mp3 binary
+stories/*/*.wav binary
+stories/*/*.mp3 binary
+examples/*/*.wav binary
+examples/*/*.mp3 binary
+
+# Model files
+models/* binary
+*.bin binary
+*.model binary
+
+# Large files that shouldn't be in git
+*.log
+*.tmp
+*.temp
+temp_*
+*.cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/
+venv/
+.env
+.coverage
+.pytest_cache/

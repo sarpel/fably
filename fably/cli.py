@@ -20,6 +20,8 @@ from fably.voice_manager import voice_manager
 from fably.cli_utils import pass_context
 
 OPENAI_URL = "https://api.openai.com/v1"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta"
+DEEPSEEK_URL = "https://api.deepseek.com/v1"
 OLLAMA_URL = "http://127.0.0.1:11434/v1"
 ELEVENLABS_URL = "https://api.elevenlabs.io"
 
@@ -27,7 +29,7 @@ PROMPT_FILE = "./prompt.txt"
 QUERIES_PATH = "./queries"
 STORIES_PATH = "./stories"
 MODELS_PATH = "./models"
-SOUND_MODEL = "vosk-model-small-en-us-0.15"
+SOUND_MODEL = "vosk-model-small-tr-0.22"  # Türkçe model
 SAMPLE_RATE = 24000
 STT_URL = OPENAI_URL
 STT_MODEL = "whisper-1"
@@ -42,12 +44,19 @@ TTS_MODEL = "tts-1"
 TTS_VOICE = "nova"
 TTS_PROVIDER = "openai"
 TTS_FORMAT = "mp3"
-LANGUAGE = "en"
+LANGUAGE = "tr"  # Türkçe varsayılan
 BUTTON_GPIO_PIN = 17
 HOLD_TIME = 3
 SOUND_DRIVER = "alsa"
-QUERY_GUARD = "tell me a story"
-CONTINUATION_PATTERNS = ["continue the story", "tell me more", "what happens next", "continue", "keep going", "more story"]
+QUERY_GUARD = "bana bir hikaye anlat"  # Turkce koruma ifadesi
+CONTINUATION_PATTERNS = [
+    "hikayeye devam et", 
+    "daha anlat", 
+    "sonra ne oldu", 
+    "devam et", 
+    "hikayeyi surdur", 
+    "ne olacak simdi"
+]
 
 # Audio Quality / Noise Reduction Defaults
 NOISE_REDUCTION_ENABLED = False
@@ -113,6 +122,40 @@ load_dotenv()
     "--llm-model",
     default=LLM_MODEL,
     help=f'The LLM model to use when generating stories. Defaults to "{LLM_MODEL}".',
+)
+@click.option(
+    "--llm-provider",
+    type=click.Choice(["openai", "gemini", "deepseek", "ollama"], case_sensitive=False),
+    default="openai",
+    help='The LLM provider to use. Defaults to "openai".',
+)
+@click.option(
+    "--gemini-api-key",
+    help="Google Gemini API key. Can also be set via GEMINI_API_KEY environment variable.",
+)
+@click.option(
+    "--deepseek-api-key", 
+    help="Deepseek API key. Can also be set via DEEPSEEK_API_KEY environment variable.",
+)
+@click.option(
+    "--stt-provider",
+    type=click.Choice(["openai_whisper", "google_cloud_speech", "local_whisper"], case_sensitive=False),
+    default="openai_whisper",
+    help='The STT provider to use. Defaults to "openai_whisper".',
+)
+@click.option(
+    "--google-cloud-api-key",
+    help="Google Cloud API key. Can also be set via GOOGLE_CLOUD_API_KEY environment variable.",
+)
+@click.option(
+    "--google-project-id",
+    help="Google Cloud project ID. Can also be set via GOOGLE_PROJECT_ID environment variable.",
+)
+@click.option(
+    "--local-whisper-model",
+    type=click.Choice(["tiny", "base", "small", "medium", "large"], case_sensitive=False),
+    default="tiny",
+    help="Local Whisper model size. Defaults to 'tiny'.",
 )
 @click.option(
     "--temperature",
@@ -194,24 +237,6 @@ load_dotenv()
 )
 @click.option("--debug", is_flag=True, default=False, help="Enables debug logging.")
 @click.option(
-    "--ignore_cache",
-    is_flag=True,
-    default=False,
-    help="Ignores the cache and always generates a new story.",
-)
-@click.option(
-    "--sound-driver",
-    type=click.Choice(["alsa", "sounddevice"], case_sensitive=False),
-    default=SOUND_DRIVER,
-    help="Which driver to use to emit sound.",
-)
-@click.option(
-    "--trim-first-frame",
-    is_flag=True,
-    default=False,
-    help="Trim the first frame of recorded audio data. Useful if the mic has a click or hiss at the beginning of each recording.",
-)
-@click.option(
     "--noise-reduction",
     is_flag=True,
     default=NOISE_REDUCTION_ENABLED,
@@ -234,6 +259,24 @@ load_dotenv()
     is_flag=True,
     default=AUTO_CALIBRATE,
     help="Automatically calibrate noise floor on startup when using noise reduction.",
+)
+@click.option(
+    "--ignore_cache",
+    is_flag=True,
+    default=False,
+    help="Ignores the cache and always generates a new story.",
+)
+@click.option(
+    "--sound-driver",
+    type=click.Choice(["alsa", "sounddevice"], case_sensitive=False),
+    default=SOUND_DRIVER,
+    help="Which driver to use to emit sound.",
+)
+@click.option(
+    "--trim-first-frame",
+    is_flag=True,
+    default=False,
+    help="Trim the first frame of recorded audio data. Useful if the mic has a click or hiss at the beginning of each recording.",
 )
 @click.option(
     "--button-gpio-pin",
@@ -262,6 +305,13 @@ def cli(
     stt_model,
     llm_url,
     llm_model,
+    llm_provider,
+    gemini_api_key,
+    deepseek_api_key,
+    stt_provider,
+    google_cloud_api_key,
+    google_project_id,
+    local_whisper_model,
     temperature,
     max_tokens,
     tts_url,
@@ -299,6 +349,13 @@ def cli(
     ctx.stt_model = stt_model
     ctx.llm_url = llm_url
     ctx.llm_model = llm_model
+    ctx.llm_provider = llm_provider
+    ctx.gemini_api_key = gemini_api_key or os.getenv("GEMINI_API_KEY")
+    ctx.deepseek_api_key = deepseek_api_key or os.getenv("DEEPSEEK_API_KEY")
+    ctx.stt_provider = stt_provider
+    ctx.google_cloud_api_key = google_cloud_api_key or os.getenv("GOOGLE_CLOUD_API_KEY")
+    ctx.google_project_id = google_project_id or os.getenv("GOOGLE_PROJECT_ID")
+    ctx.local_whisper_model = local_whisper_model
     ctx.tts_url = tts_url
     ctx.tts_model = tts_model
     ctx.temperature = temperature

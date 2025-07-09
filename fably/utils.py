@@ -1,5 +1,6 @@
 """
 Shared utility functions.
+Cross-platform compatibility for Windows development and Linux deployment.
 """
 
 import os
@@ -10,8 +11,9 @@ import time
 import colorsys
 import zipfile
 import queue
+import sys
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import yaml
 import numpy as np
@@ -20,6 +22,9 @@ import sounddevice as sd
 import soundfile as sf
 
 from vosk import Model, KaldiRecognizer
+
+# Cross-platform path handling
+from .cross_platform import normalize_path, ensure_directory, get_fably_paths, get_platform_info
 
 
 MAX_FILE_LENGTH = 255
@@ -64,7 +69,7 @@ def rotate_rgb_color(rgb_value, step_size=1):
 def resolve(path):
     """
     Resolve a path to an absolute path, creating any necessary parent
-    directories.
+    directories. Cross-platform compatible (Windows dev -> Linux deploy).
 
     If the given path is already absolute, it is returned as is. If it is
     relative, it is resolved relative to the directory of the current file.
@@ -72,21 +77,18 @@ def resolve(path):
     If the resolved path points to a directory, it is created if it does not
     exist.
     """
-    path = Path(path)
-
-    if path.is_absolute():
-        absolute_path = path
+    # Use cross-platform path normalization
+    normalized_path = normalize_path(path)
+    
+    if normalized_path.is_absolute():
+        absolute_path = normalized_path
     else:
         # Resolve relative path relative to the directory of the current file
         current_file_path = Path(__file__).resolve().parent
-        absolute_path = current_file_path / path
-
-    if not absolute_path.exists():
-        try:
-            absolute_path.mkdir(parents=True, exist_ok=True)
-        except PermissionError as e:
-            raise PermissionError(f"Cannot write to directory: {absolute_path}") from e
-    return absolute_path
+        absolute_path = current_file_path / normalized_path
+    
+    # Ensure directory exists using cross-platform function
+    return ensure_directory(absolute_path.parent) / absolute_path.name if absolute_path.suffix else ensure_directory(absolute_path)
 
 
 def get_speech_recognizer(models_path, model_name):
