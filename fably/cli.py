@@ -25,7 +25,7 @@ DEEPSEEK_URL = "https://api.deepseek.com/v1"
 OLLAMA_URL = "http://127.0.0.1:11434/v1"
 ELEVENLABS_URL = "https://api.elevenlabs.io"
 
-PROMPT_FILE = "./prompt.txt"
+PROMPT_FILE = "./fably/prompt.txt"
 QUERIES_PATH = "./queries"
 STORIES_PATH = "./stories"
 MODELS_PATH = "./models"
