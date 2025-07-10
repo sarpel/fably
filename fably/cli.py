@@ -476,7 +476,6 @@ def cli(
     if web_app:
         import subprocess
         import sys
-        import os
         
         # Check if enhanced app exists, otherwise use basic app
         enhanced_app_path = os.path.join(os.path.dirname(__file__), "..", "tools", "gradio_app", "enhanced_app.py")
