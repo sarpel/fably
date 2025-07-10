@@ -26,7 +26,7 @@ def generate_story(ctx, query, prompt):
     about the models used to generate the story to a file.
     """
     
-    # Handle different parameter names for different models
+    # Handle different parameter names and support for different models
     completion_params = {
         "stream": True,
         "model": ctx.llm_model,
@@ -34,14 +34,17 @@ def generate_story(ctx, query, prompt):
             {"role": "system", "content": prompt},
             {"role": "user", "content": query},
         ],
-        "temperature": ctx.temperature,
     }
     
-    # Use max_completion_tokens for o4-mini, max_tokens for others
-    if ctx.llm_model == "o4-mini":
+    # Handle reasoning models (o-series) vs regular models
+    if ctx.llm_model.startswith(("o1", "o3", "o4")):
+        # Reasoning models: use max_completion_tokens, no temperature/top_p
         completion_params["max_completion_tokens"] = ctx.max_tokens
+        # Note: o-series models have fixed temperature=1, top_p=1 internally
     else:
+        # Regular models: use max_tokens and support temperature
         completion_params["max_tokens"] = ctx.max_tokens
+        completion_params["temperature"] = ctx.temperature
 
     return ctx.llm_client.chat.completions.create(**completion_params)
 
