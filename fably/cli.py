@@ -219,7 +219,7 @@ load_dotenv()
 @click.option(
     "--query-guard",
     default=QUERY_GUARD,
-    help=f'The text each query has to start with. Defaults to "{QUERY_GUARD}".',
+    help=f'Optional text prefix for queries (legacy feature). Defaults to "{QUERY_GUARD}" (empty = natural language).',
 )
 @click.option(
     "--continuation-patterns",

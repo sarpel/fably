@@ -38,7 +38,7 @@ DEFAULT_CONFIG = {
     "stories_path": "./stories",
     "examples_path": "./fably/examples",
     "prompt_file": "./fably/prompt.txt",
-    "query_guard": "tell me a story"
+    "query_guard": ""  # No query guard - users can speak naturally
 }
 
 # Available voices from both providers
@@ -204,8 +204,7 @@ def transcribe_audio(audio_file: str) -> str:
 async def generate_story_content(query: str, prompt: str, temperature: float, 
                                max_tokens: int) -> str:
     """Generate story content using the configured LLM."""
-    if not query.lower().startswith(ctx.config["query_guard"]):
-        return f"Error: Query must start with '{ctx.config['query_guard']}'"
+    # No query guard validation - users can ask for stories naturally
     
     try:
         # Update context parameters
@@ -789,9 +788,9 @@ def create_gradio_interface():
                         )
                         
                         query_guard_input = gr.Textbox(
-                            label="Query Guard Phrase",
+                            label="Query Guard Phrase (Legacy)",
                             value=ctx.config["query_guard"],
-                            info="Stories must start with this phrase"
+                            info="Optional prefix for stories (leave empty for natural language)"
                         )
                         
                         language_input = gr.Textbox(

@@ -235,7 +235,7 @@ def play_sound(sound, audio_driver="alsa", fallback_silent=False):
 def play_audio_file(audio_file, audio_driver="alsa"):
     """
     Play the given audio file using the configured sound driver.
-    Enhanced with better error handling for Raspberry Pi and PortAudio issues.
+    Enhanced with better error handling for Raspberry Pi, IQaudio Codec Zero, and PortAudio issues.
     """
     logging.debug("Playing audio from %s with %s", audio_file, audio_driver)
     
@@ -250,7 +250,7 @@ def play_audio_file(audio_file, audio_driver="alsa"):
             sd.play(audio_data, sampling_frequency)
             sd.wait()
         elif audio_driver == "alsa":
-            # Enhanced ALSA playback with multiple device attempts
+            # Enhanced ALSA playback with IQaudio Codec Zero and multiple device attempts
             success = False
             
             if audio_file.suffix == ".mp3":
@@ -266,20 +266,29 @@ def play_audio_file(audio_file, audio_driver="alsa"):
                         success = True
                         break
             else:
-                # Try aplay with various configurations
+                # Try aplay with various configurations including IQaudio Codec Zero
                 device_attempts = [
-                    f"aplay -q '{audio_file}'",                    # Default
-                    f"aplay -D hw:0,0 '{audio_file}'",             # USB audio
-                    f"aplay -D hw:1,0 '{audio_file}'",             # HDMI 0  
-                    f"aplay -D default '{audio_file}'",            # System default
-                    f"aplay -D plug:default '{audio_file}'"        # Plug interface
+                    f"aplay -q '{audio_file}'",                              # Default (.asoundrc config)
+                    f"aplay -D iqaudio_playback '{audio_file}'",             # IQaudio Codec Zero optimized
+                    f"aplay -D hw:IQaudIOCODEC,0 '{audio_file}'",            # IQaudio direct hardware
+                    f"aplay -D plug:default '{audio_file}'",                 # Plug interface with conversion
+                    f"aplay -D hw:0,0 '{audio_file}'",                       # First hardware device
+                    f"aplay -D hw:1,0 '{audio_file}'",                       # Second hardware device
+                    f"aplay -D default:CARD=IQaudIOCODEC '{audio_file}'",    # IQaudio card default
+                    f"aplay -D plughw:IQaudIOCODEC,0 '{audio_file}'",        # IQaudio with format conversion
+                    f"aplay -D iqaudio_simple '{audio_file}'",               # Simple fallback config
+                    f"aplay -D default '{audio_file}'"                       # System default
                 ]
                 
                 for cmd in device_attempts:
+                    logging.debug(f"Trying: {cmd}")
                     result = os.system(f"{cmd} 2>/dev/null")
                     if result == 0:
+                        logging.debug(f"Success with: {cmd}")
                         success = True
                         break
+                    else:
+                        logging.debug(f"Failed with exit code {result}: {cmd}")
                 
                 # If ALSA failed completely and sounddevice is available, try it
                 if not success and SOUNDDEVICE_AVAILABLE:
@@ -289,6 +298,7 @@ def play_audio_file(audio_file, audio_driver="alsa"):
                         sd.play(audio_data, sampling_frequency)
                         sd.wait()
                         success = True
+                        logging.debug("sounddevice fallback succeeded")
                     except Exception as sd_error:
                         logging.debug(f"sounddevice fallback also failed: {sd_error}")
             
