@@ -25,17 +25,25 @@ def generate_story(ctx, query, prompt):
     Generates a story stream based on a given query and prompt using the OpenAI API and persists the information
     about the models used to generate the story to a file.
     """
-
-    return ctx.llm_client.chat.completions.create(
-        stream=True,
-        model=ctx.llm_model,
-        messages=[
+    
+    # Handle different parameter names for different models
+    completion_params = {
+        "stream": True,
+        "model": ctx.llm_model,
+        "messages": [
             {"role": "system", "content": prompt},
             {"role": "user", "content": query},
         ],
-        temperature=ctx.temperature,
-        max_tokens=ctx.max_tokens,
-    )
+        "temperature": ctx.temperature,
+    }
+    
+    # Use max_completion_tokens for o4-mini, max_tokens for others
+    if ctx.llm_model == "o4-mini":
+        completion_params["max_completion_tokens"] = ctx.max_tokens
+    else:
+        completion_params["max_tokens"] = ctx.max_tokens
+
+    return ctx.llm_client.chat.completions.create(**completion_params)
 
 
 async def synthesize_audio(ctx, story_path, index, text=None):
