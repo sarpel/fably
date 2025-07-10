@@ -312,6 +312,7 @@ load_dotenv()
     help="The time to hold the button to erase all recorded sounds. Defaults to {HOLD_TIME} seconds.",
 )
 @click.option("--loop", is_flag=True, default=False, help="Enables loop operation.")
+@click.option("--web-app", is_flag=True, default=False, help="Start the web application interface.")
 @pass_context
 def cli(
     ctx,
@@ -363,6 +364,7 @@ def cli(
     button_gpio_pin,
     hold_time,
     loop,
+    web_app,
 ):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -403,6 +405,7 @@ def cli(
     ctx.ignore_cache = ignore_cache
     ctx.debug = debug
     ctx.loop = loop
+    ctx.web_app = web_app
     ctx.sound_driver = sound_driver
     ctx.trim_first_frame = trim_first_frame
     ctx.noise_reduction = noise_reduction
@@ -468,6 +471,25 @@ def cli(
     if voice_preview:
         import asyncio
         asyncio.run(handle_voice_preview(voice_preview, ctx.tts_provider))
+        return
+    
+    if web_app:
+        import subprocess
+        import sys
+        import os
+        
+        # Check if enhanced app exists, otherwise use basic app
+        enhanced_app_path = os.path.join(os.path.dirname(__file__), "..", "tools", "gradio_app", "enhanced_app.py")
+        basic_app_path = os.path.join(os.path.dirname(__file__), "..", "tools", "gradio_app", "app.py")
+        
+        if os.path.exists(enhanced_app_path):
+            print("🌐 Starting Enhanced Fably Web Application...")
+            subprocess.run([sys.executable, enhanced_app_path])
+        elif os.path.exists(basic_app_path):
+            print("🌐 Starting Fably Web Application...")
+            subprocess.run([sys.executable, basic_app_path])
+        else:
+            print("❌ Web application not found. Please check tools/gradio_app/ directory.")
         return
 
     # Alsa is only supported on Linux.

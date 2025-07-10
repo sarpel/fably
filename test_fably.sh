@@ -23,13 +23,21 @@ if [ -d ".venv" ]; then
     source .venv/bin/activate
 fi
 
-# Test basic Fably functionality
-echo "Testing Fably with a simple story request..."
-fably "bana bir köpek hakkında hikaye anlat"
+# Test basic Fably functionality with debug mode
+echo "Testing Fably with debug mode to see what's happening..."
+echo "Running: fably --debug 'bana bir köpek hakkında hikaye anlat'"
+fably --debug "bana bir köpek hakkında hikaye anlat"
 
+echo ""
+echo "Testing web app option..."
+echo "Running: fably --help | grep web-app"
+fably --help | grep web-app
+
+echo ""
 echo "If you saw a story generated above, Fably is working!"
 echo ""
-echo "To use Fably interactively:"
+echo "Available commands:"
 echo "  fably --loop                          # Use with button/wakeword"
 echo "  fably --web-app                       # Start web interface"
 echo "  fably 'uzay macerası hikayesi'        # Generate specific story"
+echo "  fably --debug 'test hikayesi'         # Debug mode"
