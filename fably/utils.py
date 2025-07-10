@@ -267,12 +267,14 @@ def play_audio_file(audio_file, audio_driver="alsa"):
                         break
             else:
                 # Try aplay with various configurations including IQaudio Codec Zero
+                # User tested: plughw:0,0 works for IQaudio Codec Zero on Pi Zero 2W
                 device_attempts = [
+                    f"aplay -D plughw:0,0 '{audio_file}'",                   # WORKING: User tested IQaudio Codec Zero
                     f"aplay -q '{audio_file}'",                              # Default (.asoundrc config)
+                    f"aplay -D hw:0,0 '{audio_file}'",                       # First hardware device
                     f"aplay -D iqaudio_playback '{audio_file}'",             # IQaudio Codec Zero optimized
                     f"aplay -D hw:IQaudIOCODEC,0 '{audio_file}'",            # IQaudio direct hardware
                     f"aplay -D plug:default '{audio_file}'",                 # Plug interface with conversion
-                    f"aplay -D hw:0,0 '{audio_file}'",                       # First hardware device
                     f"aplay -D hw:1,0 '{audio_file}'",                       # Second hardware device
                     f"aplay -D default:CARD=IQaudIOCODEC '{audio_file}'",    # IQaudio card default
                     f"aplay -D plughw:IQaudIOCODEC,0 '{audio_file}'",        # IQaudio with format conversion

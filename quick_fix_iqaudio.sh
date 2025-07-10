@@ -76,20 +76,25 @@ fi
 
 log "Creating .asoundrc configuration..."
 
-# Create simple, working .asoundrc based on community solutions
+# Create simple, working .asoundrc based on user testing
 cat > "$ASOUND_PATH" << 'EOF'
-# Simple ALSA configuration for IQaudio Codec Zero (Black PCB)
-# Based on community solutions and official documentation
+# WORKING configuration for IQaudio Codec Zero (Black PCB)
+# User tested: plughw:0,0 works on Pi Zero 2W + DietPi
 
 pcm.!default {
-    type hw
-    card "IQaudIOCODEC"
-    device 0
+    type plug
+    slave.pcm "hw:0,0"
 }
 
 ctl.!default {
     type hw
-    card "IQaudIOCODEC"
+    card 0
+}
+
+# Alternative working configurations
+pcm.iqaudio {
+    type plug
+    slave.pcm "hw:0,0"
 }
 EOF
 

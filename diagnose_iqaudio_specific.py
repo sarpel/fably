@@ -188,16 +188,15 @@ def main():
         
         # .asoundrc fix
         if "Create .asoundrc file" in fix_actions:
-            print(f"\n2. Create .asoundrc file:")
+            print(f"\n2. Create .asoundrc file (USER TESTED - WORKS):")
             print(f"   cat > {asoundrc_path} << 'EOF'")
             print("pcm.!default {")
-            print("    type hw")
-            print("    card \"IQaudIOCODEC\"")
-            print("    device 0")
+            print("    type plug")
+            print("    slave.pcm \"hw:0,0\"")
             print("}")
             print("ctl.!default {")
             print("    type hw")
-            print("    card \"IQaudIOCODEC\"")
+            print("    card 0")
             print("}")
             print("EOF")
         
@@ -206,7 +205,7 @@ def main():
         
         print("\n4. Test after reboot:")
         print("   aplay -l | grep IQaudio")
-        print("   speaker-test -D hw:IQaudIOCODEC,0 -t sine -f 1000 -l 1")
+        print("   aplay -D plughw:0,0 /usr/share/sounds/alsa/Front_Left.wav")
         print("   fably --debug 'test hikayesi'")
         
     else:

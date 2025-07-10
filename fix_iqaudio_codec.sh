@@ -95,10 +95,10 @@ if [[ -f "$ASOUND_PATH" ]]; then
 fi
 
 # Create optimized ALSA config for IQaudio Codec Zero (black PCB version)
+# User tested: plughw:0,0 works on Pi Zero 2W + DietPi
 cat > "$ASOUND_PATH" << 'EOF'
-# ALSA configuration for IQaudio Codec Zero 
-# Optimized for "IQaudIO Limited www.iqaudio.com" version (black PCB)
-# Compatible with Fably on Raspberry Pi Zero 2W
+# WORKING ALSA configuration for IQaudio Codec Zero 
+# User tested on Pi Zero 2W + DietPi + "IQaudIO Limited www.iqaudio.com" version
 
 pcm.!default {
     type asym
@@ -108,39 +108,29 @@ pcm.!default {
 
 pcm.iqaudio_playback {
     type plug
-    slave {
-        pcm "hw:IQaudIOCODEC,0"
-        rate 44100
-        channels 2
-        format S16_LE
-        period_size 1024
-        buffer_size 4096
-    }
+    slave.pcm "hw:0,0"
 }
 
 pcm.iqaudio_capture {
     type plug
     slave {
-        pcm "hw:IQaudIOCODEC,0"
-        rate 44100
+        pcm "hw:0,0"
         channels 1
+        rate 44100
         format S16_LE
-        period_size 1024
-        buffer_size 4096
     }
 }
 
 # Control interface
 ctl.!default {
     type hw
-    card "IQaudIOCODEC"
+    card 0
 }
 
-# Alternative simple configuration
+# User-tested working simple configuration
 pcm.iqaudio_simple {
-    type hw
-    card "IQaudIOCODEC"
-    device 0
+    type plug
+    slave.pcm "hw:0,0"
 }
 
 # Dmix configuration for audio mixing
@@ -148,7 +138,7 @@ pcm.dmixer {
     type dmix
     ipc_key 1024
     slave {
-        pcm "hw:IQaudIOCODEC,0"
+        pcm "hw:0,0"
         rate 44100
         period_time 0
         period_size 1024
@@ -161,14 +151,14 @@ pcm.dmixer {
     }
 }
 
-# Dsnoop configuration for audio capture sharing
+# Dsnoop configuration for audio capture sharing  
 pcm.dsnooper {
     type dsnoop
     ipc_key 816357492
     ipc_key_add_uid 0
     ipc_perm 0666
     slave {
-        pcm "hw:IQaudIOCODEC,0"
+        pcm "hw:0,0"
         channels 1
         rate 44100
     }
