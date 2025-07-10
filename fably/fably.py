@@ -142,20 +142,11 @@ async def writer(ctx, story_queue, query=None):
         )
         logging.info("Voice query: %s [%s]", query, query_local)
 
-    # Check if this is a continuation query or a new story query
+    # Check if this is a continuation query
     is_continuation = utils.is_continuation_query(query, ctx.continuation_patterns)
-    is_new_story = (query.lower().startswith(ctx.query_guard.lower()) or 
-                   ctx.query_guard.lower() in query.lower())
     
-    if not (is_continuation or is_new_story):
-        logging.warning(
-            "Sorry, I can only run queries that start with '%s' or continuation patterns like '%s'",
-            ctx.query_guard,
-            "', '".join(ctx.continuation_patterns[:3])
-        )
-        utils.play_sound("sorry", audio_driver=ctx.sound_driver, fallback_silent=True)
-        await story_queue.put(None)  # Indicates that we're done
-        return
+    # For new stories, let the LLM handle any request intelligently
+    # No more rigid query validation - users can speak freely!
 
     # Handle story continuation
     if is_continuation:
@@ -184,7 +175,7 @@ async def writer(ctx, story_queue, query=None):
     else:
         # Handle new story creation
         story_path = ctx.stories_path / utils.query_to_filename(
-            query, prefix=ctx.query_guard
+            query, prefix=""  # No prefix needed anymore
         )
         story_context = None
         starting_paragraph_index = 0

@@ -48,7 +48,7 @@ LANGUAGE = "tr"  # Sadece Türkçe
 BUTTON_GPIO_PIN = 17
 HOLD_TIME = 3
 SOUND_DRIVER = "alsa"
-QUERY_GUARD = "bana bir hikaye anlat"  # Türkçe koruma ifadesi
+QUERY_GUARD = ""  # No more rigid query requirements - users can speak freely
 CONTINUATION_PATTERNS = [
     "hikayeye devam et", 
     "daha anlat", 

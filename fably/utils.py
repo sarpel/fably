@@ -18,7 +18,18 @@ from pathlib import Path, PurePosixPath
 import yaml
 import numpy as np
 import requests
-import sounddevice as sd
+# Safe import of sounddevice - PortAudio can fail on Pi
+try:
+    import sounddevice as sd
+    SOUNDDEVICE_AVAILABLE = True
+    logging.debug("sounddevice imported successfully")
+except Exception as e:
+    # PortAudio initialization failed - this is common on Pi
+    # We'll use ALSA-only mode
+    sd = None
+    SOUNDDEVICE_AVAILABLE = False
+    logging.warning(f"sounddevice not available ({e}), using ALSA-only mode")
+
 import soundfile as sf
 
 from vosk import Model, KaldiRecognizer
@@ -224,40 +235,66 @@ def play_sound(sound, audio_driver="alsa", fallback_silent=False):
 def play_audio_file(audio_file, audio_driver="alsa"):
     """
     Play the given audio file using the configured sound driver.
-    Enhanced with better error handling for Raspberry Pi.
+    Enhanced with better error handling for Raspberry Pi and PortAudio issues.
     """
     logging.debug("Playing audio from %s with %s", audio_file, audio_driver)
     
+    # Handle sounddevice unavailability
+    if audio_driver == "sounddevice" and not SOUNDDEVICE_AVAILABLE:
+        logging.info("sounddevice not available, falling back to ALSA")
+        audio_driver = "alsa"
+    
     try:
-        if audio_driver == "sounddevice":
+        if audio_driver == "sounddevice" and SOUNDDEVICE_AVAILABLE:
             audio_data, sampling_frequency = sf.read(audio_file)
             sd.play(audio_data, sampling_frequency)
             sd.wait()
         elif audio_driver == "alsa":
+            # Enhanced ALSA playback with multiple device attempts
+            success = False
+            
             if audio_file.suffix == ".mp3":
                 # Try mpg123 first, fallback to other players
-                result = os.system(f"mpg123 -q '{audio_file}' 2>/dev/null")
-                if result != 0:
-                    # Try alternative mp3 players
-                    for player in ["mpv --no-video --really-quiet", "ffplay -nodisp -autoexit", "mplayer -really-quiet"]:
-                        result = os.system(f"{player} '{audio_file}' 2>/dev/null")
-                        if result == 0:
-                            break
+                for player_cmd in [
+                    f"mpg123 -q '{audio_file}'",
+                    f"mpv --no-video --really-quiet '{audio_file}'", 
+                    f"ffplay -nodisp -autoexit '{audio_file}'",
+                    f"mplayer -really-quiet '{audio_file}'"
+                ]:
+                    result = os.system(f"{player_cmd} 2>/dev/null")
+                    if result == 0:
+                        success = True
+                        break
             else:
-                # Try aplay with various options for better compatibility
-                result = os.system(f"aplay -q '{audio_file}' 2>/dev/null")
-                if result != 0:
-                    # Try with different channel configurations
-                    result = os.system(f"aplay -D default '{audio_file}' 2>/dev/null")
-                    if result != 0:
-                        # Try with plug interface (more forgiving)
-                        result = os.system(f"aplay -D plug:default '{audio_file}' 2>/dev/null")
-                        if result != 0:
-                            # Last resort: try with sounddevice
-                            logging.debug("ALSA failed, falling back to sounddevice")
-                            audio_data, sampling_frequency = sf.read(audio_file)
-                            sd.play(audio_data, sampling_frequency)
-                            sd.wait()
+                # Try aplay with various configurations
+                device_attempts = [
+                    f"aplay -q '{audio_file}'",                    # Default
+                    f"aplay -D hw:0,0 '{audio_file}'",             # USB audio
+                    f"aplay -D hw:1,0 '{audio_file}'",             # HDMI 0  
+                    f"aplay -D default '{audio_file}'",            # System default
+                    f"aplay -D plug:default '{audio_file}'"        # Plug interface
+                ]
+                
+                for cmd in device_attempts:
+                    result = os.system(f"{cmd} 2>/dev/null")
+                    if result == 0:
+                        success = True
+                        break
+                
+                # If ALSA failed completely and sounddevice is available, try it
+                if not success and SOUNDDEVICE_AVAILABLE:
+                    try:
+                        logging.debug("ALSA failed, trying sounddevice fallback")
+                        audio_data, sampling_frequency = sf.read(audio_file)
+                        sd.play(audio_data, sampling_frequency)
+                        sd.wait()
+                        success = True
+                    except Exception as sd_error:
+                        logging.debug(f"sounddevice fallback also failed: {sd_error}")
+            
+            if not success:
+                raise RuntimeError("All audio playback methods failed")
+                
         else:
             raise ValueError(f"Unsupported audio driver: {audio_driver}")
         
@@ -266,26 +303,39 @@ def play_audio_file(audio_file, audio_driver="alsa"):
     except Exception as e:
         logging.error(f"Audio playback failed: {e}")
         # Try fallback text output for critical sounds
-        if audio_file.name in ["sorry.wav", "bye.wav", "hi.wav"]:
+        if audio_file.name in ["sorry.wav", "bye.wav", "hi.wav", "instructions.wav"]:
             fallback_text = {
                 "sorry.wav": "Üzgünüm, anlayamadım.",
                 "bye.wav": "Görüşürüz!",
-                "hi.wav": "Merhaba! Ben Fably!"
+                "hi.wav": "Merhaba! Ben Fably!",
+                "instructions.wav": "Düğmeye basın ve hangi hikayeyi anlatmamı istediğinizi söyleyin."
             }.get(audio_file.name, "")
             if fallback_text:
-                logging.info(f"Audio fallback: {fallback_text}")
+                print(f"🔊 {fallback_text}")
         raise
 
 
-def query_to_filename(query, prefix):
+def query_to_filename(query, prefix=""):
     """
     Convert a query from a voice assistant into a file name that can be used to save the story.
-
-    This function removes the query guard part and removes any illegal characters from the file name.
+    Enhanced to handle natural Turkish speech without rigid prefixes.
     """
-    # Remove the query guard part since it doesn't add any information
-    query = query.lower().replace(prefix, "", 1).strip()
-
+    # Remove prefix if provided (backwards compatibility)
+    if prefix:
+        query = query.lower().replace(prefix.lower(), "", 1).strip()
+    
+    # Take first few meaningful words for filename
+    query = query.lower().strip()
+    
+    # Remove common Turkish filler words for cleaner filenames
+    filler_words = ["bir", "bana", "anlat", "istiyorum", "hakkında", "ile", "ve", "lütfen"]
+    words = query.split()
+    meaningful_words = [w for w in words if w not in filler_words]
+    
+    # Use first 3-4 meaningful words or fall back to original
+    if meaningful_words:
+        query = " ".join(meaningful_words[:4])
+    
     # Remove the period at the end if it exists
     if query.endswith("."):
         query = query[:-1]
