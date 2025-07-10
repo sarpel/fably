@@ -437,7 +437,8 @@ def create_gradio_interface():
                                     choices=[],  # Will be populated dynamically
                                     value=f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}",
                                     label="TTS Voice",
-                                    interactive=True
+                                    interactive=True,
+                                    allow_custom_value=True
                                 )
                                 refresh_voices_btn = gr.Button("🔄 Refresh Voices")
                             
@@ -466,7 +467,8 @@ def create_gradio_interface():
                                         choices=[],  # Will be populated dynamically
                                         value=f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}",
                                         label="Voice for new paragraphs",
-                                        interactive=True
+                                        interactive=True,
+                                        allow_custom_value=True
                                     )
                                 generate_continuation_btn = gr.Button("✨ Generate Continuation", variant="primary")
                             
@@ -491,14 +493,6 @@ def create_gradio_interface():
                 refresh_voices_btn.click(
                     fn=refresh_voices,
                     outputs=[voice_select]
-                )
-                
-                # Also add refresh to new story voice
-                refresh_story_voices_btn = gr.Button("🔄 Refresh Voices", size="sm")
-                
-                refresh_story_voices_btn.click(
-                    fn=refresh_voices,
-                    outputs=[new_story_voice]
                 )
                 
                 def load_selected_story(selected_story):
@@ -645,8 +639,11 @@ def create_gradio_interface():
                             choices=[],  # Will be populated dynamically
                             value=f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}",
                             label="🎵 TTS Voice",
-                            interactive=True
+                            interactive=True,
+                            allow_custom_value=True
                         )
+                        
+                        refresh_new_story_voices_btn = gr.Button("🔄 Refresh Voices", size="sm")
                 
                 generate_story_button = gr.Button("✨ Generate Story", variant="primary")
                 
@@ -702,6 +699,11 @@ def create_gradio_interface():
                     fn=lambda query, story, voice: save_story_to_disk(query, story, voice),
                     inputs=[transcribed_query, story_output, new_story_voice],
                     outputs=[new_story_status]
+                )
+                
+                refresh_new_story_voices_btn.click(
+                    fn=refresh_voices,
+                    outputs=[new_story_voice]
                 )
             
             # Settings Tab
@@ -773,7 +775,8 @@ def create_gradio_interface():
                         default_voice_input = gr.Dropdown(
                             choices=[],  # Will be populated dynamically
                             value=f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}",
-                            label="Default TTS Voice"
+                            label="Default TTS Voice",
+                            allow_custom_value=True
                         )
                 
                 with gr.Row():
