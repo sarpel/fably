@@ -144,7 +144,8 @@ async def writer(ctx, story_queue, query=None):
 
     # Check if this is a continuation query or a new story query
     is_continuation = utils.is_continuation_query(query, ctx.continuation_patterns)
-    is_new_story = query.lower().startswith(ctx.query_guard)
+    is_new_story = (query.lower().startswith(ctx.query_guard.lower()) or 
+                   ctx.query_guard.lower() in query.lower())
     
     if not (is_continuation or is_new_story):
         logging.warning(
@@ -152,7 +153,7 @@ async def writer(ctx, story_queue, query=None):
             ctx.query_guard,
             "', '".join(ctx.continuation_patterns[:3])
         )
-        utils.play_sound("sorry", audio_driver=ctx.sound_driver)
+        utils.play_sound("sorry", audio_driver=ctx.sound_driver, fallback_silent=True)
         await story_queue.put(None)  # Indicates that we're done
         return
 

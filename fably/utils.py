@@ -201,7 +201,7 @@ def play_sound(sound, audio_driver="alsa", fallback_silent=False):
     Args:
         sound: Name of the sound file (without .wav extension)
         audio_driver: Audio driver to use ("alsa" or "sounddevice")
-        fallback_silent: If True, fail silently when sound file not found
+        fallback_silent: If True, fail silently when sound file not found or audio fails
     """
     sound_file = Path(__file__).resolve().parent / SOUNDS_PATH / f"{sound}.wav"
     if not sound_file.exists():
@@ -210,26 +210,71 @@ def play_sound(sound, audio_driver="alsa", fallback_silent=False):
             return
         else:
             raise ValueError(f"Sound {sound} not found in path {sound_file}.")
-    play_audio_file(sound_file, audio_driver)
+    
+    try:
+        play_audio_file(sound_file, audio_driver)
+    except Exception as e:
+        if fallback_silent:
+            logging.debug(f"Audio playback failed for {sound}: {e}")
+        else:
+            logging.error(f"Audio playback failed for {sound}: {e}")
+            raise
 
 
 def play_audio_file(audio_file, audio_driver="alsa"):
     """
     Play the given audio file using the configured sound driver.
+    Enhanced with better error handling for Raspberry Pi.
     """
     logging.debug("Playing audio from %s with %s", audio_file, audio_driver)
-    if audio_driver == "sounddevice":
-        audio_data, sampling_frequency = sf.read(audio_file)
-        sd.play(audio_data, sampling_frequency)
-        sd.wait()
-    elif audio_driver == "alsa":
-        if audio_file.suffix == ".mp3":
-            os.system(f"mpg123 {audio_file}")
+    
+    try:
+        if audio_driver == "sounddevice":
+            audio_data, sampling_frequency = sf.read(audio_file)
+            sd.play(audio_data, sampling_frequency)
+            sd.wait()
+        elif audio_driver == "alsa":
+            if audio_file.suffix == ".mp3":
+                # Try mpg123 first, fallback to other players
+                result = os.system(f"mpg123 -q '{audio_file}' 2>/dev/null")
+                if result != 0:
+                    # Try alternative mp3 players
+                    for player in ["mpv --no-video --really-quiet", "ffplay -nodisp -autoexit", "mplayer -really-quiet"]:
+                        result = os.system(f"{player} '{audio_file}' 2>/dev/null")
+                        if result == 0:
+                            break
+            else:
+                # Try aplay with various options for better compatibility
+                result = os.system(f"aplay -q '{audio_file}' 2>/dev/null")
+                if result != 0:
+                    # Try with different channel configurations
+                    result = os.system(f"aplay -D default '{audio_file}' 2>/dev/null")
+                    if result != 0:
+                        # Try with plug interface (more forgiving)
+                        result = os.system(f"aplay -D plug:default '{audio_file}' 2>/dev/null")
+                        if result != 0:
+                            # Last resort: try with sounddevice
+                            logging.debug("ALSA failed, falling back to sounddevice")
+                            audio_data, sampling_frequency = sf.read(audio_file)
+                            sd.play(audio_data, sampling_frequency)
+                            sd.wait()
         else:
-            os.system(f"aplay {audio_file}")
-    else:
-        raise ValueError(f"Unsupported audio driver: {audio_driver}")
-    logging.debug("Done playing %s with %s", audio_file, audio_driver)
+            raise ValueError(f"Unsupported audio driver: {audio_driver}")
+        
+        logging.debug("Successfully played %s with %s", audio_file, audio_driver)
+        
+    except Exception as e:
+        logging.error(f"Audio playback failed: {e}")
+        # Try fallback text output for critical sounds
+        if audio_file.name in ["sorry.wav", "bye.wav", "hi.wav"]:
+            fallback_text = {
+                "sorry.wav": "Üzgünüm, anlayamadım.",
+                "bye.wav": "Görüşürüz!",
+                "hi.wav": "Merhaba! Ben Fably!"
+            }.get(audio_file.name, "")
+            if fallback_text:
+                logging.info(f"Audio fallback: {fallback_text}")
+        raise
 
 
 def query_to_filename(query, prefix):
