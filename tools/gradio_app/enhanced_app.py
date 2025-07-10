@@ -54,6 +54,25 @@ class EnhancedFablyContext:
     
     def __init__(self, config: Dict = None):
         self.config = {**DEFAULT_CONFIG, **(config or {})}
+        
+        # Add all required attributes from CLI context
+        self.api_key = self.config["api_key"]
+        self.elevenlabs_api_key = self.config.get("elevenlabs_api_key", "")
+        self.stt_url = self.config["stt_url"]
+        self.stt_model = self.config["stt_model"]
+        self.llm_url = self.config["llm_url"]
+        self.llm_model = self.config["llm_model"]  # This was missing!
+        self.temperature = self.config["temperature"]
+        self.max_tokens = self.config["max_tokens"]
+        self.tts_url = self.config["tts_url"]
+        self.tts_model = self.config["tts_model"]
+        self.tts_voice = self.config["tts_voice"]
+        self.tts_format = self.config["tts_format"]
+        self.tts_provider = self.config["tts_provider"]
+        self.elevenlabs_url = self.config["elevenlabs_url"]
+        self.language = self.config["language"]
+        self.sound_driver = "alsa"  # Default sound driver
+        
         self._init_clients()
         self._init_paths()
     
@@ -99,6 +118,27 @@ class EnhancedFablyContext:
         self.stories_path = utils.resolve(self.config["stories_path"])
         self.examples_path = utils.resolve(self.config["examples_path"])
         self.prompt_file = utils.resolve(self.config["prompt_file"])
+    
+    def persist_runtime_params(self, output_file, **kwargs):
+        """
+        Writes information about the models used to generate the story to a file.
+        Compatible with the CLI context's persist_runtime_params method.
+        """
+        info = {
+            "language": self.language,
+            "stt_url": self.stt_url,
+            "stt_model": self.stt_model,
+            "llm_url": self.llm_url,
+            "llm_model": self.llm_model,
+            "llm_temperature": self.temperature,
+            "llm_max_tokens": self.max_tokens,
+            "tts_url": self.tts_url,
+            "tts_model": self.tts_model,
+            "tts_voice": self.tts_voice,
+        }
+        for key, value in kwargs.items():
+            info[key] = value
+        utils.write_to_yaml(output_file, info)
 
 
 # Global context instance
