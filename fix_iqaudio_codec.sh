@@ -94,10 +94,11 @@ if [[ -f "$ASOUND_PATH" ]]; then
     log "Backed up existing .asoundrc"
 fi
 
-# Create optimized ALSA config for IQaudio Codec Zero
+# Create optimized ALSA config for IQaudio Codec Zero (black PCB version)
 cat > "$ASOUND_PATH" << 'EOF'
-# ALSA configuration for IQaudio Codec Zero
-# Optimized for Fably on Raspberry Pi Zero 2W
+# ALSA configuration for IQaudio Codec Zero 
+# Optimized for "IQaudIO Limited www.iqaudio.com" version (black PCB)
+# Compatible with Fably on Raspberry Pi Zero 2W
 
 pcm.!default {
     type asym
@@ -109,7 +110,7 @@ pcm.iqaudio_playback {
     type plug
     slave {
         pcm "hw:IQaudIOCODEC,0"
-        rate 48000
+        rate 44100
         channels 2
         format S16_LE
         period_size 1024
@@ -121,8 +122,8 @@ pcm.iqaudio_capture {
     type plug
     slave {
         pcm "hw:IQaudIOCODEC,0"
-        rate 48000
-        channels 2
+        rate 44100
+        channels 1
         format S16_LE
         period_size 1024
         buffer_size 4096
@@ -135,18 +136,42 @@ ctl.!default {
     card "IQaudIOCODEC"
 }
 
-# Alternative configurations for fallback
-pcm.iqaudio_alt {
+# Alternative simple configuration
+pcm.iqaudio_simple {
     type hw
     card "IQaudIOCODEC"
     device 0
-    rate 44100
-    format S16_LE
 }
 
-pcm.iqaudio_simple {
-    type plug
-    slave.pcm "hw:0,0"
+# Dmix configuration for audio mixing
+pcm.dmixer {
+    type dmix
+    ipc_key 1024
+    slave {
+        pcm "hw:IQaudIOCODEC,0"
+        rate 44100
+        period_time 0
+        period_size 1024
+        buffer_size 8192
+        channels 2
+    }
+    bindings {
+        0 0
+        1 1
+    }
+}
+
+# Dsnoop configuration for audio capture sharing
+pcm.dsnooper {
+    type dsnoop
+    ipc_key 816357492
+    ipc_key_add_uid 0
+    ipc_perm 0666
+    slave {
+        pcm "hw:IQaudIOCODEC,0"
+        channels 1
+        rate 44100
+    }
 }
 EOF
 
@@ -162,7 +187,7 @@ sudo tee /etc/modprobe.d/iqaudio-codec.conf > /dev/null << 'EOF'
 options snd-soc-iqaudio-codec dai_fmt=i2s
 EOF
 
-# Step 5: Configure system audio settings
+# Step 5: Configure system audio settings for IQaudio Codec Zero
 log "Configuring system audio settings..."
 
 # Create systemd service to set audio levels on boot
@@ -174,7 +199,7 @@ After=sound.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/bin/bash -c 'sleep 5 && amixer -c IQaudIOCODEC set "Output Mixer HiFi" on 2>/dev/null || true && amixer -c IQaudIOCODEC set "Input Mux" "Line In" 2>/dev/null || true'
+ExecStart=/bin/bash -c 'sleep 5 && amixer -c IQaudIOCODEC set "Headphone" 80% 2>/dev/null || true && amixer -c IQaudIOCODEC set "Lineout" 80% 2>/dev/null || true && amixer -c IQaudIOCODEC set "Mic 1" 50% 2>/dev/null || true'
 User=root
 
 [Install]
