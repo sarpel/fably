@@ -96,35 +96,97 @@ def get_speech_recognizer(models_path, model_name):
     Return a speech recognizer instance using the given model.
 
     The model is downloaded if not already available.
+    Includes fallback support for Turkish models.
     """
     model_dir = Path(models_path) / Path(model_name)
 
     if not model_dir.exists():
-        zip_path = model_dir.with_suffix(".zip")
-        model_url = f"https://alphacephei.com/vosk/models/{model_name}.zip"
-
-        logging.debug("Downloading the model from %s...", model_url)
-
-        # Download the model
-        with requests.get(model_url, stream=True, timeout=10) as r:
-            r.raise_for_status()
-            with open(zip_path, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-
-        # Unzip the model
-        print("Unzipping the model...")
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(model_dir.parent)
-
-        # Remove the zip file after extraction
-        os.remove(zip_path)
-        logging.debug("Model %s downloaded and unpacked in %s", model_name, model_dir)
+        # Try to download the specified model
+        success = download_vosk_model(models_path, model_name)
+        
+        if not success and model_name.startswith("vosk-model-small-tr"):
+            # Fallback for Turkish models
+            logging.warning(f"Turkish model {model_name} not found, trying fallback versions...")
+            fallback_models = [
+                "vosk-model-small-tr-0.3",
+                "vosk-model-small-tr-0.22", 
+                "vosk-model-small-tr-0.21"
+            ]
+            
+            for fallback_model in fallback_models:
+                if fallback_model != model_name:
+                    logging.info(f"Trying fallback Turkish model: {fallback_model}")
+                    success = download_vosk_model(models_path, fallback_model)
+                    if success:
+                        model_name = fallback_model
+                        model_dir = Path(models_path) / Path(model_name)
+                        break
+            
+            if not success:
+                raise RuntimeError(f"Failed to download any Turkish Vosk model. Please check your internet connection or manually download from https://alphacephei.com/vosk/models/")
+        elif not success:
+            raise RuntimeError(f"Failed to download Vosk model {model_name}. Please check your internet connection.")
 
     model = Model(str(model_dir))
     return KaldiRecognizer(
         model, QUERY_SAMPLE_RATE
     )  # The sample rate is fixed in the model
+
+
+def download_vosk_model(models_path, model_name):
+    """
+    Download a Vosk model from the official repository.
+    
+    Args:
+        models_path: Path to store models
+        model_name: Name of the model to download
+        
+    Returns:
+        bool: True if download succeeded, False otherwise
+    """
+    model_dir = Path(models_path) / Path(model_name)
+    zip_path = model_dir.with_suffix(".zip")
+    model_url = f"https://alphacephei.com/vosk/models/{model_name}.zip"
+
+    try:
+        logging.info(f"Downloading {model_name} from {model_url}...")
+
+        # Download the model with timeout and proper error handling
+        with requests.get(model_url, stream=True, timeout=30) as r:
+            r.raise_for_status()
+            
+            # Create directory if it doesn't exist
+            zip_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(zip_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+        # Unzip the model
+        logging.info(f"Unzipping {model_name}...")
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(model_dir.parent)
+
+        # Remove the zip file after extraction
+        if zip_path.exists():
+            zip_path.unlink()
+            
+        logging.info(f"Model {model_name} downloaded and unpacked successfully in {model_dir}")
+        return True
+        
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Network error downloading {model_name}: {e}")
+        return False
+    except zipfile.BadZipFile as e:
+        logging.error(f"Invalid zip file for {model_name}: {e}")
+        if zip_path.exists():
+            zip_path.unlink()
+        return False
+    except Exception as e:
+        logging.error(f"Unexpected error downloading {model_name}: {e}")
+        if zip_path.exists():
+            zip_path.unlink()
+        return False
 
 
 def write_audio_data_to_file(audio_data, audio_file, sample_rate):
