@@ -25,9 +25,21 @@ error() {
 
 log "Fably RPi5 Quick Fix Script"
 
+# Check if virtual environment is activated
+if [[ -z "$VIRTUAL_ENV" ]]; then
+    if [[ -d ".venv" ]]; then
+        log "Activating virtual environment..."
+        source .venv/bin/activate
+    else
+        log "Creating virtual environment..."
+        python3 -m venv .venv
+        source .venv/bin/activate
+    fi
+fi
+
 # Fix file permissions
 log "Fixing file permissions..."
-sudo chown -R $USER:$USER $HOME
+sudo chown -R $USER:$USER $HOME || true
 chmod 755 $HOME
 
 # Fix .asoundrc creation
@@ -67,13 +79,19 @@ chmod 644 "$ASOUND_PATH"
 log "Installing any missing Python dependencies..."
 pip install --upgrade pip setuptools wheel
 
-# Install with modern setuptools
+# Try to remove problematic pyproject.toml temporarily
+log "Temporarily backing up pyproject.toml..."
 if [[ -f "pyproject.toml" ]]; then
-    log "Installing Fably with modern setuptools..."
-    pip install --editable . --use-pep517
-else
-    log "Installing Fably with legacy setuptools..."
-    pip install --editable .
+    mv pyproject.toml pyproject.toml.backup
+fi
+
+# Install with legacy setuptools (more compatible with older pip)
+log "Installing Fably with legacy setuptools..."
+pip install --editable . --no-use-pep517
+
+# Restore pyproject.toml
+if [[ -f "pyproject.toml.backup" ]]; then
+    mv pyproject.toml.backup pyproject.toml
 fi
 
 # Test audio devices
@@ -103,7 +121,37 @@ if fably --help > /dev/null 2>&1; then
     log "  fably --web-app                     # Start web interface"
 else
     error "❌ Fably installation test failed"
-    exit 1
+    
+    # Try alternative installation method
+    warn "Trying alternative installation method..."
+    
+    # Install dependencies one by one to isolate issues
+    log "Installing core dependencies individually..."
+    pip install openai requests click python-dotenv pyyaml numpy
+    pip install sounddevice soundfile vosk pydub aiohttp
+    
+    # Install Pi-specific packages
+    log "Installing Raspberry Pi packages..."
+    pip install gpiozero RPi.GPIO || warn "GPIO packages failed (normal if not on Pi)"
+    pip install apa102-pi || warn "APA102 LED package failed (normal without hardware)"
+    
+    # Install wakeword engines
+    log "Installing wakeword engines..."
+    pip install pvporcupine || warn "Picovoice failed (check platform)"
+    pip install onnxruntime || warn "ONNX Runtime failed"
+    
+    # Manual setup.py install
+    log "Running manual setup.py install..."
+    python setup.py develop || python setup.py install
+    
+    # Final test
+    if fably --help > /dev/null 2>&1; then
+        log "✅ Alternative installation succeeded!"
+    else
+        error "❌ All installation methods failed"
+        error "Please check error messages above and report to developers"
+        exit 1
+    fi
 fi
 
 log "🎉 RPi5 quick fix completed!"
