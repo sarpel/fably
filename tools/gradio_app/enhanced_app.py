@@ -722,76 +722,240 @@ def create_gradio_interface():
             
             # Settings Tab
             with gr.Tab("⚙️ Settings"):
-                gr.Markdown("### Configuration Settings")
+                gr.Markdown("### Provider Configuration Settings")
+                gr.Markdown("*Configure different AI service providers separately*")
                 
-                with gr.Row():
-                    with gr.Column():
-                        gr.Markdown("#### API Configuration")
-                        
-                        api_key_input = gr.Textbox(
-                            label="OpenAI API Key",
-                            value=ctx.config["api_key"],
-                            type="password",
-                            placeholder="sk-..."
-                        )
-                        
-                        elevenlabs_key_input = gr.Textbox(
-                            label="ElevenLabs API Key",
-                            value=ctx.config.get("elevenlabs_api_key", ""),
-                            type="password",
-                            placeholder="your-elevenlabs-api-key"
-                        )
-                        
-                        tts_provider_select = gr.Dropdown(
-                            choices=TTS_PROVIDERS,
-                            value=ctx.config["tts_provider"],
-                            label="Default TTS Provider"
-                        )
-                        
-                        stt_url_input = gr.Textbox(
-                            label="STT Service URL",
-                            value=ctx.config["stt_url"]
-                        )
-                        
-                        llm_url_input = gr.Textbox(
-                            label="LLM Service URL", 
-                            value=ctx.config["llm_url"]
-                        )
-                        
-                        tts_url_input = gr.Textbox(
-                            label="TTS Service URL",
-                            value=ctx.config["tts_url"] 
-                        )
-                        
-                        elevenlabs_url_input = gr.Textbox(
-                            label="ElevenLabs Service URL",
-                            value=ctx.config["elevenlabs_url"]
-                        )
+                with gr.Tabs():
                     
-                    with gr.Column():
-                        gr.Markdown("#### Model Configuration")
+                    # OpenAI Provider Tab
+                    with gr.Tab("🤖 OpenAI"):
+                        with gr.Row():
+                            with gr.Column():
+                                gr.Markdown("#### OpenAI API Configuration")
+                                
+                                openai_api_key = gr.Textbox(
+                                    label="OpenAI API Key",
+                                    value=ctx.config["api_key"],
+                                    type="password",
+                                    placeholder="sk-proj-...",
+                                    info="Required for OpenAI services"
+                                )
+                                
+                                openai_base_url = gr.Textbox(
+                                    label="OpenAI Base URL",
+                                    value=ctx.config["llm_url"],
+                                    placeholder="https://api.openai.com/v1",
+                                    info="Change for custom OpenAI-compatible endpoints"
+                                )
+                            
+                            with gr.Column():
+                                gr.Markdown("#### OpenAI Models")
+                                
+                                openai_llm_model = gr.Dropdown(
+                                    choices=["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
+                                    value=ctx.config["llm_model"],
+                                    label="Language Model",
+                                    allow_custom_value=True,
+                                    info="Model for story generation"
+                                )
+                                
+                                openai_stt_model = gr.Dropdown(
+                                    choices=["whisper-1"],
+                                    value=ctx.config["stt_model"],
+                                    label="Speech-to-Text Model",
+                                    allow_custom_value=True
+                                )
+                                
+                                openai_tts_model = gr.Dropdown(
+                                    choices=["tts-1", "tts-1-hd"],
+                                    value=ctx.config["tts_model"],
+                                    label="Text-to-Speech Model",
+                                    allow_custom_value=True,
+                                    info="tts-1-hd for higher quality"
+                                )
+                                
+                                openai_voice_select = gr.Dropdown(
+                                    choices=[(voice.capitalize(), voice) for voice in OPENAI_VOICES],
+                                    value=ctx.config["tts_voice"] if ctx.config["tts_provider"] == "openai" else "nova",
+                                    label="Default OpenAI Voice",
+                                    info="Voice for OpenAI TTS"
+                                )
+                    
+                    # ElevenLabs Provider Tab
+                    with gr.Tab("🎵 ElevenLabs"):
+                        with gr.Row():
+                            with gr.Column():
+                                gr.Markdown("#### ElevenLabs API Configuration")
+                                
+                                elevenlabs_api_key = gr.Textbox(
+                                    label="ElevenLabs API Key",
+                                    value=ctx.config.get("elevenlabs_api_key", ""),
+                                    type="password",
+                                    placeholder="your-elevenlabs-api-key",
+                                    info="Required for ElevenLabs voices"
+                                )
+                                
+                                elevenlabs_base_url = gr.Textbox(
+                                    label="ElevenLabs Base URL",
+                                    value=ctx.config["elevenlabs_url"],
+                                    placeholder="https://api.elevenlabs.io"
+                                )
+                            
+                            with gr.Column():
+                                gr.Markdown("#### ElevenLabs Settings")
+                                
+                                elevenlabs_model = gr.Dropdown(
+                                    choices=["eleven_monolingual_v1", "eleven_multilingual_v1", "eleven_multilingual_v2"],
+                                    value="eleven_monolingual_v1",
+                                    label="ElevenLabs Model",
+                                    allow_custom_value=True,
+                                    info="Voice synthesis model"
+                                )
+                                
+                                elevenlabs_voice_select = gr.Dropdown(
+                                    choices=[],  # Will be populated dynamically
+                                    label="Default ElevenLabs Voice",
+                                    info="Will load available voices from your account",
+                                    allow_custom_value=True
+                                )
+                                
+                                load_elevenlabs_voices_btn = gr.Button("🔄 Load My ElevenLabs Voices")
+                                
+                                with gr.Accordion("Voice Quality Settings", open=False):
+                                    stability_slider = gr.Slider(
+                                        minimum=0.0, maximum=1.0, value=0.5, step=0.1,
+                                        label="Stability", info="More stable = less variation"
+                                    )
+                                    similarity_slider = gr.Slider(
+                                        minimum=0.0, maximum=1.0, value=0.75, step=0.05,
+                                        label="Similarity Boost", info="Higher = closer to original voice"
+                                    )
+                    
+                    # Gemini Provider Tab
+                    with gr.Tab("💎 Google Gemini"):
+                        with gr.Row():
+                            with gr.Column():
+                                gr.Markdown("#### Google Gemini Configuration")
+                                
+                                gemini_api_key = gr.Textbox(
+                                    label="Gemini API Key",
+                                    value=ctx.config.get("gemini_api_key", ""),
+                                    type="password",
+                                    placeholder="AIza...",
+                                    info="Get from Google AI Studio"
+                                )
+                                
+                                gemini_base_url = gr.Textbox(
+                                    label="Gemini Base URL",
+                                    value="https://generativelanguage.googleapis.com/v1beta",
+                                    placeholder="https://generativelanguage.googleapis.com/v1beta"
+                                )
+                            
+                            with gr.Column():
+                                gr.Markdown("#### Gemini Models")
+                                
+                                gemini_model = gr.Dropdown(
+                                    choices=["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"],
+                                    value="gemini-1.5-pro",
+                                    label="Gemini Model",
+                                    allow_custom_value=True,
+                                    info="Language model for story generation"
+                                )
+                    
+                    # Custom Provider Tab
+                    with gr.Tab("🔧 Custom Provider"):
+                        gr.Markdown("#### Custom AI Provider Setup")
+                        gr.Markdown("*Configure any OpenAI-compatible API endpoint*")
                         
-                        stt_model_input = gr.Textbox(
-                            label="STT Model",
-                            value=ctx.config["stt_model"]
-                        )
-                        
-                        llm_model_input = gr.Textbox(
-                            label="LLM Model",
-                            value=ctx.config["llm_model"]
-                        )
-                        
-                        tts_model_input = gr.Textbox(
-                            label="TTS Model",
-                            value=ctx.config["tts_model"]
-                        )
-                        
-                        default_voice_input = gr.Dropdown(
-                            choices=[],  # Will be populated dynamically
-                            value=f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}",
-                            label="Default TTS Voice",
-                            allow_custom_value=True
-                        )
+                        with gr.Row():
+                            with gr.Column():
+                                custom_provider_name = gr.Textbox(
+                                    label="Provider Name",
+                                    placeholder="My Custom LLM",
+                                    info="Friendly name for this provider"
+                                )
+                                
+                                custom_api_key = gr.Textbox(
+                                    label="API Key",
+                                    type="password",
+                                    placeholder="your-custom-api-key"
+                                )
+                                
+                                custom_base_url = gr.Textbox(
+                                    label="Base URL",
+                                    placeholder="http://localhost:1234/v1",
+                                    info="Full API endpoint URL"
+                                )
+                            
+                            with gr.Column():
+                                custom_llm_model = gr.Textbox(
+                                    label="Language Model ID",
+                                    placeholder="llama-3.1-8b-instruct",
+                                    info="Model identifier for this endpoint"
+                                )
+                                
+                                custom_stt_model = gr.Textbox(
+                                    label="STT Model ID (optional)",
+                                    placeholder="whisper-1"
+                                )
+                                
+                                custom_tts_model = gr.Textbox(
+                                    label="TTS Model ID (optional)",
+                                    placeholder="tts-1"
+                                )
+                                
+                                test_custom_connection_btn = gr.Button("🔍 Test Connection")
+                    
+                    # Global Settings Tab
+                    with gr.Tab("🌐 Global Settings"):
+                        with gr.Row():
+                            with gr.Column():
+                                gr.Markdown("#### Default Provider Selection")
+                                
+                                default_llm_provider = gr.Dropdown(
+                                    choices=["openai", "gemini", "custom"],
+                                    value="openai",
+                                    label="Default Language Model Provider",
+                                    info="Which provider to use for story generation"
+                                )
+                                
+                                default_tts_provider = gr.Dropdown(
+                                    choices=["openai", "elevenlabs"],
+                                    value=ctx.config["tts_provider"],
+                                    label="Default TTS Provider",
+                                    info="Which provider to use for speech synthesis"
+                                )
+                                
+                                default_stt_provider = gr.Dropdown(
+                                    choices=["openai", "custom"],
+                                    value="openai",
+                                    label="Default STT Provider",
+                                    info="Which provider to use for speech recognition"
+                                )
+                            
+                            with gr.Column():
+                                gr.Markdown("#### Story Generation Defaults")
+                                
+                                default_temperature = gr.Slider(
+                                    0, 2.0,
+                                    value=ctx.config["temperature"],
+                                    label="Default Temperature",
+                                    info="Creativity level (0=focused, 2=very creative)"
+                                )
+                                
+                                default_max_tokens = gr.Slider(
+                                    100, 4000,
+                                    value=ctx.config["max_tokens"],
+                                    label="Default Max Tokens",
+                                    info="Maximum length of generated stories"
+                                )
+                                
+                                language_input = gr.Textbox(
+                                    label="Language",
+                                    value=ctx.config["language"],
+                                    placeholder="tr",
+                                    info="Language code for stories (tr, en, etc.)"
+                                )
                 
                 with gr.Row():
                     with gr.Column():
@@ -864,49 +1028,88 @@ def create_gradio_interface():
                             info="How long to measure ambient noise"
                         )
                 
-                save_settings_button = gr.Button("💾 Save Settings", variant="primary")
-                settings_status = gr.Textbox(
-                    label="Settings Status",
-                    interactive=False
-                )
+                # Complete Settings Section with Save functionality
+                with gr.Row():
+                    save_settings_button = gr.Button("💾 Save All Settings", variant="primary", size="lg")
+                    
+                with gr.Row():    
+                    settings_status = gr.Textbox(
+                        label="Settings Status",
+                        interactive=False,
+                        lines=3
+                    )
                 
-                def save_settings(*args):
-                    """Save updated settings to context."""
+                # Save Settings Functions
+                def save_openai_settings(api_key, base_url, llm_model, stt_model, tts_model, voice):
+                    """Save OpenAI specific settings."""
                     try:
-                        # Update context configuration
-                        config_keys = [
-                            "api_key", "elevenlabs_api_key", "tts_provider", 
-                            "stt_url", "llm_url", "tts_url", "elevenlabs_url",
-                            "stt_model", "llm_model", "tts_model", "tts_voice",
-                            "stories_path", "query_guard", "language",
-                            "temperature", "max_tokens",
-                            "noise_reduction", "noise_sensitivity", "auto_calibrate", "calibration_duration"
-                        ]
-                        
-                        for i, key in enumerate(config_keys):
-                            if i < len(args):
-                                ctx.config[key] = args[i]
+                        ctx.config["api_key"] = api_key
+                        ctx.config["llm_url"] = base_url
+                        ctx.config["stt_url"] = base_url  
+                        ctx.config["tts_url"] = base_url
+                        ctx.config["llm_model"] = llm_model
+                        ctx.config["stt_model"] = stt_model
+                        ctx.config["tts_model"] = tts_model
+                        if ctx.config["tts_provider"] == "openai":
+                            ctx.config["tts_voice"] = voice
+                        return "✅ OpenAI settings saved"
+                    except Exception as e:
+                        return f"❌ Error saving OpenAI settings: {str(e)}"
+                
+                def save_elevenlabs_settings(api_key, base_url, model):
+                    """Save ElevenLabs specific settings."""
+                    try:
+                        ctx.config["elevenlabs_api_key"] = api_key
+                        ctx.config["elevenlabs_url"] = base_url
+                        ctx.config["elevenlabs_model"] = model
+                        return "✅ ElevenLabs settings saved"
+                    except Exception as e:
+                        return f"❌ Error saving ElevenLabs settings: {str(e)}"
+                
+                def save_global_settings(llm_provider, tts_provider, stt_provider, temperature, max_tokens, language, stories_path):
+                    """Save global application settings."""
+                    try:
+                        ctx.config["default_llm_provider"] = llm_provider
+                        ctx.config["tts_provider"] = tts_provider
+                        ctx.config["default_stt_provider"] = stt_provider
+                        ctx.config["temperature"] = temperature
+                        ctx.config["max_tokens"] = max_tokens
+                        ctx.config["language"] = language
+                        ctx.config["stories_path"] = stories_path
                         
                         # Reinitialize clients with new settings
                         ctx._init_clients()
                         ctx._init_paths()
                         
-                        return "✅ Settings saved successfully!"
-                    
+                        return "✅ Global settings saved successfully!"
                     except Exception as e:
-                        return f"❌ Error saving settings: {str(e)}"
+                        return f"❌ Error saving global settings: {str(e)}"
                 
-                save_settings_button.click(
-                    fn=save_settings,
-                    inputs=[
-                        api_key_input, elevenlabs_key_input, tts_provider_select,
-                        stt_url_input, llm_url_input, tts_url_input, elevenlabs_url_input,
-                        stt_model_input, llm_model_input, tts_model_input, default_voice_input,
-                        stories_path_input, query_guard_input, language_input,
-                        default_temperature, default_max_tokens,
-                        noise_reduction_enabled, noise_sensitivity, auto_calibrate, calibration_duration
-                    ],
-                    outputs=[settings_status]
+                def load_elevenlabs_voices(api_key):
+                    """Load voices from ElevenLabs account."""
+                    try:
+                        if not api_key.strip():
+                            return gr.Dropdown(choices=[]), "❌ Please enter ElevenLabs API key first"
+                        
+                        # Create temporary ElevenLabs provider to get voices
+                        import asyncio
+                        from fably.tts_service import ElevenLabsTTSProvider
+                        
+                        async def get_voices():
+                            provider = ElevenLabsTTSProvider(api_key)
+                            voices = await provider.get_available_voices()
+                            return [(voice['name'], voice['id']) for voice in voices]
+                        
+                        voice_choices = asyncio.run(get_voices())
+                        return gr.Dropdown(choices=voice_choices), f"✅ Loaded {len(voice_choices)} voices"
+                    except Exception as e:
+                        return gr.Dropdown(choices=[]), f"❌ Error loading voices: {str(e)}"
+                
+                # Event handlers for new settings
+                load_elevenlabs_voices_btn.click(
+                    fn=load_elevenlabs_voices,
+                    inputs=[elevenlabs_api_key],
+                    outputs=[elevenlabs_voice_select, settings_status]
                 )
             
             # Story Collections Tab - Advanced Story Management
