@@ -529,6 +529,11 @@ def create_gradio_interface():
                     outputs=[voice_select]
                 )
                 
+                refresh_button.click(
+                    fn=refresh_story_list,
+                    outputs=[story_dropdown]
+                )
+                
                 def load_selected_story(selected_story):
                     if not selected_story:
                         return (
@@ -1338,6 +1343,34 @@ def create_gradio_interface():
                     inputs=[search_query, category_filter, voice_filter],
                     outputs=[story_collection]
                 )
+                
+                # Collections action button handlers
+                def add_to_favorites():
+                    """Add selected stories to favorites (placeholder)."""
+                    return "⭐ Favorites feature coming soon!"
+                
+                def export_selected_stories():
+                    """Export selected stories (placeholder)."""
+                    return "📤 Export feature coming soon!"
+                
+                def delete_selected_stories():
+                    """Delete selected stories (placeholder)."""
+                    return "🗑️ Delete feature coming soon!"
+                
+                favorite_btn.click(
+                    fn=add_to_favorites,
+                    outputs=[collection_status]
+                )
+                
+                export_btn.click(
+                    fn=export_selected_stories,
+                    outputs=[collection_status]
+                )
+                
+                delete_btn.click(
+                    fn=delete_selected_stories,
+                    outputs=[collection_status]
+                )
             
             # About Tab
             with gr.Tab("ℹ️ About"):
@@ -1533,22 +1566,22 @@ def get_story_statistics() -> str:
         
         # Generate HTML stats
         stats_html = f"""
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-            <h4>📊 Story Collection Statistics</h4>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px;">
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; color: #333;">
+            <h4 style="color: #2c3e50;">📊 Story Collection Statistics</h4>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; color: #495057;">
                 <div><strong>Total Stories:</strong> {total_stories}</div>
                 <div><strong>Total Paragraphs:</strong> {total_paragraphs}</div>
                 <div><strong>Recent Stories:</strong> {len(recent_stories)}</div>
                 <div><strong>Avg Paragraphs:</strong> {total_paragraphs // total_stories if total_stories > 0 else 0}</div>
             </div>
             
-            <h5 style="margin-top: 15px;">🎵 Voice Usage</h5>
-            <div style="font-size: 0.9em;">
+            <h5 style="margin-top: 15px; color: #2c3e50;">🎵 Voice Usage</h5>
+            <div style="font-size: 0.9em; color: #495057;">
         """
         
         for voice, count in sorted(voice_counts.items(), key=lambda x: x[1], reverse=True):
             percentage = (count / total_stories * 100) if total_stories > 0 else 0
-            stats_html += f"<div>{voice}: {count} stories ({percentage:.1f}%)</div>"
+            stats_html += f"<div style='color: #495057;'>{voice}: {count} stories ({percentage:.1f}%)</div>"
         
         stats_html += """
             </div>
@@ -1558,7 +1591,7 @@ def get_story_statistics() -> str:
         return stats_html
     
     except Exception as e:
-        return f"<div>Error generating statistics: {str(e)}</div>"
+        return f"<div style='color: #e74c3c; padding: 10px; background: #f8f9fa; border-radius: 5px;'>Error generating statistics: {str(e)}</div>"
 
 
 def filter_story_collection(search_query: str, category: str, voice_filter: str) -> str:
@@ -1623,11 +1656,11 @@ def filter_story_collection(search_query: str, category: str, voice_filter: str)
         
         # Generate HTML for filtered stories
         if not filtered_stories:
-            return "<div>No stories match the current filters.</div>"
+            return "<div style='color: #495057; padding: 10px;'>No stories match the current filters.</div>"
         
         html_content = f"""
-        <div style="max-height: 400px; overflow-y: auto;">
-            <h5>📖 Found {len(filtered_stories)} stories</h5>
+        <div style="max-height: 400px; overflow-y: auto; color: #333;">
+            <h5 style="color: #2c3e50;">📖 Found {len(filtered_stories)} stories</h5>
         """
         
         for name, path in filtered_stories[:20]:  # Limit to 20 for performance
@@ -1648,8 +1681,8 @@ def filter_story_collection(search_query: str, category: str, voice_filter: str)
                     pass
             
             html_content += f"""
-            <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px; background: white;">
-                <div style="font-weight: bold; color: #333;">{name}</div>
+            <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px; background: #ffffff; color: #333;">
+                <div style="font-weight: bold; color: #2c3e50;">{name}</div>
                 <div style="font-size: 0.9em; color: #666; margin: 5px 0;">
                     Query: {query_info}
                 </div>
@@ -1666,7 +1699,7 @@ def filter_story_collection(search_query: str, category: str, voice_filter: str)
         return html_content
     
     except Exception as e:
-        return f"<div>Error filtering stories: {str(e)}</div>"
+        return f"<div style='color: #e74c3c; padding: 10px; background: #f8f9fa; border-radius: 5px;'>Error filtering stories: {str(e)}</div>"
 
 
 # Export/Import and Backup Functions
