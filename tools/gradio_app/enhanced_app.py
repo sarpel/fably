@@ -1566,22 +1566,22 @@ def get_story_statistics() -> str:
         
         # Generate HTML stats
         stats_html = f"""
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; color: #333;">
-            <h4 style="color: #2c3e50;">📊 Story Collection Statistics</h4>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; color: #495057;">
+        <div style="background: #2c3e50; padding: 15px; border-radius: 8px; margin: 10px 0; color: #ffffff;">
+            <h4 style="color: #ffffff;">📊 Story Collection Statistics</h4>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; color: #ecf0f1;">
                 <div><strong>Total Stories:</strong> {total_stories}</div>
                 <div><strong>Total Paragraphs:</strong> {total_paragraphs}</div>
                 <div><strong>Recent Stories:</strong> {len(recent_stories)}</div>
                 <div><strong>Avg Paragraphs:</strong> {total_paragraphs // total_stories if total_stories > 0 else 0}</div>
             </div>
             
-            <h5 style="margin-top: 15px; color: #2c3e50;">🎵 Voice Usage</h5>
-            <div style="font-size: 0.9em; color: #495057;">
+            <h5 style="margin-top: 15px; color: #ffffff;">🎵 Voice Usage</h5>
+            <div style="font-size: 0.9em; color: #ecf0f1;">
         """
         
         for voice, count in sorted(voice_counts.items(), key=lambda x: x[1], reverse=True):
             percentage = (count / total_stories * 100) if total_stories > 0 else 0
-            stats_html += f"<div style='color: #495057;'>{voice}: {count} stories ({percentage:.1f}%)</div>"
+            stats_html += f"<div style='color: #ecf0f1;'>{voice}: {count} stories ({percentage:.1f}%)</div>"
         
         stats_html += """
             </div>
@@ -1591,7 +1591,7 @@ def get_story_statistics() -> str:
         return stats_html
     
     except Exception as e:
-        return f"<div style='color: #e74c3c; padding: 10px; background: #f8f9fa; border-radius: 5px;'>Error generating statistics: {str(e)}</div>"
+        return f"<div style='color: #ffffff; padding: 10px; background: #e74c3c; border-radius: 5px;'>Error generating statistics: {str(e)}</div>"
 
 
 def filter_story_collection(search_query: str, category: str, voice_filter: str) -> str:
