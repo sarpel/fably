@@ -39,7 +39,7 @@ class TTSProvider(ABC):
 class OpenAITTSProvider(TTSProvider):
     """OpenAI TTS provider implementation."""
     
-    AVAILABLE_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+    AVAILABLE_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer", "ash", "sage", "coral"]
     SUPPORTED_FORMATS = ["mp3", "opus", "aac", "flac", "wav", "pcm"]
     
     def __init__(self, api_key: str, base_url: str = "https://api.openai.com/v1"):

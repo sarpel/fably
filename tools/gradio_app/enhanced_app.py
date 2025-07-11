@@ -41,8 +41,8 @@ DEFAULT_CONFIG = {
     "query_guard": ""  # No query guard - users can speak naturally
 }
 
-# Available voices from both providers
-OPENAI_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+# Available voices from both providers  
+OPENAI_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer", "ash", "sage", "coral"]
 ELEVENLABS_VOICES = []  # Will be populated dynamically
 
 # TTS Providers
@@ -266,7 +266,7 @@ async def generate_story_content(query: str, prompt: str, temperature: float,
         return f"Error generating story: {str(e)}"
 
 
-async def get_available_voices() -> List[str]:
+async def get_available_voices() -> List[Tuple[str, str]]:
     """Get all available voices from configured providers."""
     voice_options = []
     
@@ -288,6 +288,9 @@ async def get_available_voices() -> List[str]:
         print(f"Error getting voices: {str(e)}")
         # Fallback to OpenAI voices
         for voice in OPENAI_VOICES:
+            voice_options.append((f"{voice.capitalize()} (OpenAI)", f"openai:{voice}"))
+    
+    return voice_options
             voice_options.append((f"{voice.capitalize()} (OpenAI)", f"openai:{voice}"))
     
     return voice_options
@@ -345,31 +348,6 @@ async def synthesize_with_provider(text: str, voice_spec: str) -> Tuple[int, any
             
             return samplerate, data
             
-    except Exception as e:
-        print(f"Error generating speech: {str(e)}")
-        return None
-    """Convert text to speech and return audio data."""
-    if not text.strip():
-        return None
-    
-    try:
-        response = await ctx.tts_client.audio.speech.create(
-            input=text,
-            model=ctx.config["tts_model"],
-            voice=voice,
-            response_format="wav",
-        )
-        
-        # Write to temporary file and read back
-        temp_file = "temp_story.wav"
-        response.write_to_file(temp_file)
-        data, samplerate = sf.read(temp_file)
-        
-        # Clean up temp file
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
-        
-        return samplerate, data
     except Exception as e:
         print(f"Error generating speech: {str(e)}")
         return None
