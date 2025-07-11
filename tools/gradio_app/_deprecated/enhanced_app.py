@@ -710,6 +710,15 @@ def create_gradio_interface():
     
     with gr.Blocks(title="Fably - AI Storyteller Management", theme=gr.themes.Soft()) as app:
         
+        # Language notice for Turkish interface
+        with gr.Row():
+            gr.Markdown("""
+            <div style="background: #e8f4f8; padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #17a2b8;">
+            🇹🇷 <strong>Türkçe arayüz için:</strong> <code>python enhanced_app_localized.py</code> dosyasını kullanın (varsayılan dil Türkçe)<br>
+            🇬🇧 <strong>For Turkish interface:</strong> Use <code>python enhanced_app_localized.py</code> instead (Turkish as default)
+            </div>
+            """)
+        
         gr.Markdown("# 📚 Fably - AI Storyteller Management Interface")
         gr.Markdown("*Comprehensive story creation, editing, and audio generation*")
         
@@ -1358,108 +1367,109 @@ def create_gradio_interface():
                                     interactive=False
                                 )
                 
-                # Audio Quality & Noise Reduction Settings
-                with gr.Row():
-                    with gr.Column():
-                        gr.Markdown("#### Audio Quality Settings")
+                # Audio Quality & Noise Reduction Settings (Only in Global Settings)
+                with gr.Accordion("🎵 Audio Quality & Hardware Controls", open=False):
+                    with gr.Row():
+                        with gr.Column():
+                            gr.Markdown("#### Audio Quality Settings")
+                            
+                            noise_reduction_enabled = gr.Checkbox(
+                                label="Enable Noise Reduction",
+                                value=ctx.config.get("noise_reduction", False),
+                                info="Filter background noise during voice recording"
+                            )
+                            
+                            noise_sensitivity = gr.Slider(
+                                0.1, 10.0,
+                                value=ctx.config.get("noise_sensitivity", 2.0),
+                                step=0.1,
+                                label="Noise Sensitivity",
+                                info="Higher values are more sensitive to quiet sounds"
+                            )
                         
-                        noise_reduction_enabled = gr.Checkbox(
-                            label="Enable Noise Reduction",
-                            value=ctx.config.get("noise_reduction", False),
-                            info="Filter background noise during voice recording"
-                        )
-                        
-                        noise_sensitivity = gr.Slider(
-                            0.1, 10.0,
-                            value=ctx.config.get("noise_sensitivity", 2.0),
-                            step=0.1,
-                            label="Noise Sensitivity",
-                            info="Higher values are more sensitive to quiet sounds"
-                        )
+                        with gr.Column():
+                            gr.Markdown("#### Audio Calibration")
+                            
+                            auto_calibrate = gr.Checkbox(
+                                label="Auto-Calibrate Noise Floor",
+                                value=ctx.config.get("auto_calibrate", False),
+                                info="Automatically measure ambient noise on startup"
+                            )
+                            
+                            calibration_duration = gr.Slider(
+                                1.0, 10.0,
+                                value=ctx.config.get("calibration_duration", 3.0),
+                                step=0.5,
+                                label="Calibration Duration (seconds)",
+                                info="How long to measure ambient noise"
+                            )
                     
-                    with gr.Column():
-                        gr.Markdown("#### Audio Calibration")
+                    # Wakeword Detection & GPIO Controls
+                    with gr.Row():
+                        with gr.Column():
+                            gr.Markdown("#### 🎙️ Wakeword Detection")
+                            
+                            wakeword_engine = gr.Dropdown(
+                                choices=[
+                                    ("Disabled", "none"),
+                                    ("PPN (Picovoice - Recommended for Pi Zero 2W)", "ppn"),
+                                    ("ONNX (Custom trained models)", "onnx"), 
+                                    ("TFLite (TensorFlow Lite)", "tflite")
+                                ],
+                                value=ctx.config.get("wakeword_engine", "none"),
+                                label="Wakeword Engine",
+                                info="Voice activation engine (PPN recommended for Pi Zero 2W)",
+                                interactive=True
+                            )
+                            
+                            wakeword_model = gr.Textbox(
+                                label="Wakeword Model Path",
+                                value=ctx.config.get("wakeword_model", ""),
+                                placeholder="/path/to/fably.ppn",
+                                info="Path to wakeword model file (.ppn, .onnx, .tflite)",
+                                interactive=True
+                            )
+                            
+                            wakeword_sensitivity = gr.Slider(
+                                0.0, 1.0,
+                                value=ctx.config.get("wakeword_sensitivity", 0.5),
+                                step=0.1,
+                                label="Wakeword Sensitivity",
+                                info="Detection sensitivity (0.0=strict, 1.0=sensitive)",
+                                interactive=True
+                            )
                         
-                        auto_calibrate = gr.Checkbox(
-                            label="Auto-Calibrate Noise Floor",
-                            value=ctx.config.get("auto_calibrate", False),
-                            info="Automatically measure ambient noise on startup"
-                        )
-                        
-                        calibration_duration = gr.Slider(
-                            1.0, 10.0,
-                            value=ctx.config.get("calibration_duration", 3.0),
-                            step=0.5,
-                            label="Calibration Duration (seconds)",
-                            info="How long to measure ambient noise"
-                        )
-                
-                # Wakeword Detection & GPIO Controls
-                with gr.Row():
-                    with gr.Column():
-                        gr.Markdown("#### 🎙️ Wakeword Detection")
-                        
-                        wakeword_engine = gr.Dropdown(
-                            choices=[
-                                ("Disabled", "none"),
-                                ("PPN (Picovoice - Recommended for Pi Zero 2W)", "ppn"),
-                                ("ONNX (Custom trained models)", "onnx"), 
-                                ("TFLite (TensorFlow Lite)", "tflite")
-                            ],
-                            value=ctx.config.get("wakeword_engine", "none"),
-                            label="Wakeword Engine",
-                            info="Voice activation engine (PPN recommended for Pi Zero 2W)",
-                            interactive=True
-                        )
-                        
-                        wakeword_model = gr.Textbox(
-                            label="Wakeword Model Path",
-                            value=ctx.config.get("wakeword_model", ""),
-                            placeholder="/path/to/fably.ppn",
-                            info="Path to wakeword model file (.ppn, .onnx, .tflite)",
-                            interactive=True
-                        )
-                        
-                        wakeword_sensitivity = gr.Slider(
-                            0.0, 1.0,
-                            value=ctx.config.get("wakeword_sensitivity", 0.5),
-                            step=0.1,
-                            label="Wakeword Sensitivity",
-                            info="Detection sensitivity (0.0=strict, 1.0=sensitive)",
-                            interactive=True
-                        )
-                    
-                    with gr.Column():
-                        gr.Markdown("#### 🔘 GPIO Button Controls")
-                        
-                        gpio_button_enabled = gr.Checkbox(
-                            label="Enable GPIO Button",
-                            value=ctx.config.get("gpio_button", False),
-                            info="Use physical button as wakeword alternative"
-                        )
-                        
-                        button_gpio_pin = gr.Slider(
-                            1, 40,
-                            value=ctx.config.get("button_gpio_pin", 17),
-                            step=1,
-                            label="GPIO Pin Number",
-                            info="GPIO pin for button (default: 17)",
-                            interactive=True
-                        )
-                        
-                        voice_cycle_enabled = gr.Checkbox(
-                            label="Enable Voice Cycling",
-                            value=ctx.config.get("voice_cycle", False),
-                            info="Double-tap button to cycle between voices"
-                        )
-                        
-                        button_hold_time = gr.Slider(
-                            1.0, 10.0,
-                            value=ctx.config.get("hold_time", 3.0),
-                            step=0.5,
-                            label="Long Press Duration (seconds)",
-                            info="Hold time for shutdown command"
-                        )
+                        with gr.Column():
+                            gr.Markdown("#### 🔘 GPIO Button Controls")
+                            
+                            gpio_button_enabled = gr.Checkbox(
+                                label="Enable GPIO Button",
+                                value=ctx.config.get("gpio_button", False),
+                                info="Use physical button as wakeword alternative"
+                            )
+                            
+                            button_gpio_pin = gr.Slider(
+                                1, 40,
+                                value=ctx.config.get("button_gpio_pin", 17),
+                                step=1,
+                                label="GPIO Pin Number",
+                                info="GPIO pin for button (default: 17)",
+                                interactive=True
+                            )
+                            
+                            voice_cycle_enabled = gr.Checkbox(
+                                label="Enable Voice Cycling",
+                                value=ctx.config.get("voice_cycle", False),
+                                info="Double-tap button to cycle between voices"
+                            )
+                            
+                            button_hold_time = gr.Slider(
+                                1.0, 10.0,
+                                value=ctx.config.get("hold_time", 3.0),
+                                step=0.5,
+                                label="Long Press Duration (seconds)",
+                                info="Hold time for shutdown command"
+                            )
                 
                 # Complete Settings Section with Save functionality
                 with gr.Row():
@@ -1556,9 +1566,8 @@ def create_gradio_interface():
                     # Global settings
                     default_llm_prov, default_tts_prov, default_stt_prov,
                     default_temp, default_tokens, lang, stories_path, interface_lang,
-                    # Audio settings
+                    # Audio & Hardware settings (only from Global Settings)
                     noise_reduction, noise_sens, auto_cal, cal_duration,
-                    # Wakeword & GPIO settings
                     wakeword_eng, wakeword_mod, wakeword_sens, gpio_btn, btn_gpio_pin, voice_cycle, btn_hold_time
                 ):
                     """Save all settings across all provider tabs."""
@@ -1662,9 +1671,8 @@ def create_gradio_interface():
                         # Global settings
                         default_llm_provider, default_tts_provider, default_stt_provider,
                         default_temperature, default_max_tokens, language_input, stories_path_input, interface_language_info,
-                        # Audio settings
+                        # Audio & Hardware settings (only from Global Settings)
                         noise_reduction_enabled, noise_sensitivity, auto_calibrate, calibration_duration,
-                        # Wakeword & GPIO settings
                         wakeword_engine, wakeword_model, wakeword_sensitivity, 
                         gpio_button_enabled, button_gpio_pin, voice_cycle_enabled, button_hold_time
                     ],

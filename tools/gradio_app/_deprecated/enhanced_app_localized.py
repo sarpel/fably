@@ -16,6 +16,9 @@ import yaml
 from fably import fably, utils
 from fably_localization import get_text, get_available_languages, DEFAULT_LANGUAGE
 
+# Set Turkish as default language
+DEFAULT_LANGUAGE = "tr"
+
 
 # Default configuration - can be overridden via environment variables
 DEFAULT_CONFIG = {
@@ -161,7 +164,7 @@ class EnhancedFablyContext:
 
 # Global context instance
 ctx = EnhancedFablyContext()
-current_language = DEFAULT_LANGUAGE  # Global language state
+current_language = "tr"  # Default to Turkish
 
 
 def set_language(lang):
@@ -457,14 +460,14 @@ def create_gradio_interface():
         
         # Language selector at the top
         with gr.Row():
-            with gr.Column(scale=6):
+            with gr.Column(scale=5):
                 gr.Markdown(f"# {_('title')}")
                 gr.Markdown(f"*{_('subtitle')}*")
-            with gr.Column(scale=1):
+            with gr.Column(scale=2):
                 language_selector = gr.Dropdown(
                     choices=get_available_languages(),
                     value=current_language,
-                    label=_('language_selector'),
+                    label=_('language_selector') if current_language in get_available_languages() else "🌍 Dil Seçimi",
                     interactive=True
                 )
         
@@ -1571,7 +1574,7 @@ Hikayeyi doğal şekilde devam ettiren tam olarak {num_paragraphs} yeni paragraf
 
 
 if __name__ == "__main__":
-    # Launch the enhanced Gradio interface with Turkish localization
+    # Launch the enhanced Gradio interface with Turkish as default
     app = create_gradio_interface()
     app.launch(
         share=False,

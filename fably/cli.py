@@ -312,7 +312,7 @@ load_dotenv()
     help="The time to hold the button to erase all recorded sounds. Defaults to {HOLD_TIME} seconds.",
 )
 @click.option("--loop", is_flag=True, default=False, help="Enables loop operation.")
-@click.option("--web-app", is_flag=True, default=False, help="Start the web application interface.")
+@click.option("--web-app", is_flag=True, default=False, help="Launch the professional web interface for story management.")
 @pass_context
 def cli(
     ctx,
@@ -477,18 +477,27 @@ def cli(
         import subprocess
         import sys
         
-        # Check if enhanced app exists, otherwise use basic app
-        enhanced_app_path = os.path.join(os.path.dirname(__file__), "..", "tools", "gradio_app", "enhanced_app.py")
-        basic_app_path = os.path.join(os.path.dirname(__file__), "..", "tools", "gradio_app", "app.py")
+        # Use the new professional web interface
+        web_interface_path = os.path.join(os.path.dirname(__file__), "..", "web_interface", "launch.py")
         
-        if os.path.exists(enhanced_app_path):
-            print("🌐 Starting Enhanced Fably Web Application...")
-            subprocess.run([sys.executable, enhanced_app_path])
-        elif os.path.exists(basic_app_path):
-            print("🌐 Starting Fably Web Application...")
-            subprocess.run([sys.executable, basic_app_path])
+        if os.path.exists(web_interface_path):
+            print("🚀 Fably Profesyonel Web Arayüzü başlatılıyor...")
+            print("📍 Adres: http://localhost:7860")
+            print("🌍 Varsayılan dil: Türkçe")
+            subprocess.run([sys.executable, web_interface_path])
         else:
-            print("❌ Web application not found. Please check tools/gradio_app/ directory.")
+            # Fallback to old enhanced app if exists
+            enhanced_app_path = os.path.join(os.path.dirname(__file__), "..", "tools", "gradio_app", "enhanced_app.py")
+            basic_app_path = os.path.join(os.path.dirname(__file__), "..", "tools", "gradio_app", "app.py")
+            
+            if os.path.exists(enhanced_app_path):
+                print("🌐 Eski Enhanced Fably Web Uygulaması başlatılıyor...")
+                subprocess.run([sys.executable, enhanced_app_path])
+            elif os.path.exists(basic_app_path):
+                print("🌐 Temel Fably Web Uygulaması başlatılıyor...")
+                subprocess.run([sys.executable, basic_app_path])
+            else:
+                print("❌ Web arayüzü bulunamadı. Lütfen web_interface/ dizinini kontrol edin.")
         return
 
     # Alsa is only supported on Linux.

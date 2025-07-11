@@ -107,23 +107,33 @@ fably --continue "uzay_macerasi" --voice "elevenlabs:adam" "Uzay gemisi Mars'a i
 ### 🌐 Web Arayüzü
 
 ```bash
+# Profesyonel web arayüzünü başlat
 fably --web-app
 # http://localhost:7860 adresinde açılır
+
+# Veya doğrudan başlat
+python web_interface/launch.py
 ```
 
 #### **Web Arayüzü Özellikleri**
 
-**📚 Hikaye Üretimi Sekmesi**
-- Hikaye istemleri için metin girişi
-- Ses seçimi (OpenAI + ElevenLabs)
-- Model seçimi (GPT-4o, Gemini, DeepSeek)
-- Paragraf sayısı kontrolü (1-10)
+**📚 Hikaye Kütüphanesi**
+- Mevcut hikayeleri görüntüleme ve düzenleme
+- Paragraf düzeyinde gerçek zamanlı düzenleme
+- Sesli içerik yeniden oluşturma
+- Hikaye devam ettirme sistemi
 
-**📖 Hikaye Kütüphanesi**
-- Zengin metadata ile görsel hikaye tarayıcısı
-- Her paragraf için ses oynatma/duraklama
-- Bireysel paragrafları yeniden üretme
-- Hikaye devam ettirme işlevi
+**✨ Yeni Hikaye Oluştur**
+- Sesli sorgu kaydetme ve metin girişi
+- Çoklu AI sağlayıcı desteği (OpenAI, Gemini, ElevenLabs)
+- Gelişmiş yapılandırma seçenekleri
+- Gerçek zamanlı ses sentezi
+
+**⚙️ Sistem Ayarları**
+- Çoklu AI sağlayıcı yönetimi
+- Ses kalitesi ve donanım kontrolleri  
+- Türkçe/İngilizce dinamik dil desteği
+- Profesyonel yapılandırma arayüzü
 
 ### 🔧 Gelişmiş Yapılandırma
 
