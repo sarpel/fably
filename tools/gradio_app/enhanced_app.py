@@ -907,7 +907,6 @@ def create_gradio_interface():
                                     info="Voice style for Gemini TTS",
                                     interactive=True
                                 )
-                                )
                     
                     # Custom Provider Tab
                     with gr.Tab("🔧 Custom Provider"):
@@ -1023,44 +1022,6 @@ def create_gradio_interface():
                                     info="Directory where stories are saved",
                                     interactive=True
                                 )
-                                    placeholder="tr",
-                                    info="Language code for stories (tr, en, etc.)"
-                                )
-                
-                with gr.Row():
-                    with gr.Column():
-                        gr.Markdown("#### Story Configuration")
-                        
-                        stories_path_input = gr.Textbox(
-                            label="Stories Directory",
-                            value=ctx.config["stories_path"]
-                        )
-                        
-                        query_guard_input = gr.Textbox(
-                            label="Query Guard Phrase (Legacy)",
-                            value=ctx.config["query_guard"],
-                            info="Optional prefix for stories (leave empty for natural language)"
-                        )
-                        
-                        language_input = gr.Textbox(
-                            label="Language",
-                            value=ctx.config["language"]
-                        )
-                    
-                    with gr.Column():
-                        gr.Markdown("#### Generation Defaults")
-                        
-                        default_temperature = gr.Slider(
-                            0, 2.0,
-                            value=ctx.config["temperature"],
-                            label="Default Temperature"
-                        )
-                        
-                        default_max_tokens = gr.Slider(
-                            100, 4000,
-                            value=ctx.config["max_tokens"],
-                            label="Default Max Tokens"
-                        )
                 
                 # Audio Quality & Noise Reduction Settings
                 with gr.Row():
