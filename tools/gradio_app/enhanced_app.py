@@ -25,18 +25,19 @@ DEFAULT_CONFIG = {
     "elevenlabs_api_key": os.getenv("ELEVENLABS_API_KEY", ""),
     "stt_url": "https://api.openai.com/v1",
     "stt_model": "whisper-1", 
-    "llm_url": "https://api.openai.com/v1",
-    "llm_model": "gpt-4o",
+    "llm_url": "https://generativelanguage.googleapis.com/v1beta",
+    "llm_model": "gemini-2.5-flash",
+    "default_llm_provider": "gemini",
     "tts_url": "https://api.openai.com/v1",
     "tts_model": "tts-1",
-    "tts_voice": "nova",
-    "tts_provider": "openai",
+    "tts_voice": "xsGHrtxT5AdDzYXTQT0d",
+    "tts_provider": "elevenlabs",
     "tts_format": "mp3",
     "elevenlabs_url": "https://api.elevenlabs.io",
     "gemini_url": "https://generativelanguage.googleapis.com/v1beta",
-    "language": "en",
-    "temperature": 1.0,
-    "max_tokens": 2000,
+    "language": "tr",
+    "temperature": 1.2,
+    "max_tokens": 4000,
     "stories_path": "./stories",
     "examples_path": "./fably/examples",
     "prompt_file": "./fably/prompt.txt",
@@ -84,10 +85,21 @@ class EnhancedFablyContext:
             base_url=self.config["stt_url"], 
             api_key=self.config["api_key"]
         )
-        self.llm_client = openai.AsyncClient(
-            base_url=self.config["llm_url"], 
-            api_key=self.config["api_key"]
-        )
+        
+        # Use gemini API key if default LLM provider is gemini
+        if self.config.get("default_llm_provider", "gemini") == "gemini":
+            # For Gemini, we'll use a different client setup if needed
+            # For now, keeping OpenAI client structure for compatibility
+            self.llm_client = openai.AsyncClient(
+                base_url=self.config["llm_url"], 
+                api_key=self.config.get("gemini_api_key", self.config["api_key"])
+            )
+        else:
+            self.llm_client = openai.AsyncClient(
+                base_url=self.config["llm_url"], 
+                api_key=self.config["api_key"]
+            )
+            
         self.tts_client = openai.AsyncClient(
             base_url=self.config["tts_url"], 
             api_key=self.config["api_key"]
@@ -658,12 +670,12 @@ def create_gradio_interface():
                         with gr.Row():
                             temperature_slider = gr.Slider(
                                 0, 2.0, 
-                                value=ctx.config["temperature"], 
+                                value=1.2, 
                                 label="🌡️ Creativity (Temperature)"
                             )
                             max_tokens_slider = gr.Slider(
                                 100, 4000, 
-                                value=ctx.config["max_tokens"], 
+                                value=4000, 
                                 label="📏 Max Length (Tokens)"
                             )
                     
@@ -914,7 +926,7 @@ def create_gradio_interface():
                                 gr.Markdown("#### Gemini Models")
                                 
                                 gemini_model = gr.Dropdown(
-                                    choices=["gemini-2.5-pro", "gemini-2.5-flash", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"],
+                                    choices=["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite-preview-06-17", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"],
                                     value="gemini-2.5-flash",
                                     label="Gemini LLM Model",
                                     allow_custom_value=True,
@@ -993,6 +1005,12 @@ def create_gradio_interface():
                                 )
                                 
                                 test_custom_connection_btn = gr.Button("🔍 Test Connection")
+                                
+                                custom_connection_status = gr.Textbox(
+                                    label="Connection Test Status",
+                                    interactive=False,
+                                    lines=3
+                                )
                     
                     # Global Settings Tab
                     with gr.Tab("🌐 Global Settings"):
@@ -1002,7 +1020,7 @@ def create_gradio_interface():
                                 
                                 default_llm_provider = gr.Dropdown(
                                     choices=["openai", "gemini", "custom"],
-                                    value="openai",
+                                    value="gemini",
                                     label="Default Language Model Provider",
                                     info="Which provider to use for story generation",
                                     interactive=True
@@ -1010,7 +1028,7 @@ def create_gradio_interface():
                                 
                                 default_tts_provider = gr.Dropdown(
                                     choices=["openai", "elevenlabs", "gemini"],
-                                    value=ctx.config["tts_provider"],
+                                    value="elevenlabs",
                                     label="Default TTS Provider",
                                     info="Which provider to use for speech synthesis",
                                     interactive=True
@@ -1029,7 +1047,7 @@ def create_gradio_interface():
                                 
                                 default_temperature = gr.Slider(
                                     0, 2.0,
-                                    value=ctx.config["temperature"],
+                                    value=1.2,
                                     label="Default Temperature",
                                     info="Creativity level (0=focused, 2=very creative)",
                                     interactive=True
@@ -1037,7 +1055,7 @@ def create_gradio_interface():
                                 
                                 default_max_tokens = gr.Slider(
                                     100, 4000,
-                                    value=ctx.config["max_tokens"],
+                                    value=4000,
                                     label="Default Max Tokens",
                                     info="Maximum length of generated stories",
                                     interactive=True
@@ -1045,7 +1063,7 @@ def create_gradio_interface():
                                 
                                 language_input = gr.Textbox(
                                     label="Language",
-                                    value=ctx.config["language"],
+                                    value="tr",
                                     placeholder="tr",
                                     info="Language code for stories (tr, en, etc.)",
                                     interactive=True
@@ -1057,6 +1075,18 @@ def create_gradio_interface():
                                     placeholder="./stories",
                                     info="Directory where stories are saved",
                                     interactive=True
+                                )
+                                
+                                # Interface Language Information
+                                interface_language_info = gr.Dropdown(
+                                    choices=[
+                                        ("English (Current)", "en"),
+                                        ("🇹🇷 Türkçe (Use enhanced_app_localized.py)", "tr")
+                                    ],
+                                    value="en",
+                                    label="Interface Language",
+                                    info="For Turkish interface, use enhanced_app_localized.py",
+                                    interactive=False
                                 )
                 
                 # Audio Quality & Noise Reduction Settings
@@ -1189,7 +1219,7 @@ def create_gradio_interface():
                     gemini_key, gemini_url, gemini_llm, gemini_tts, gemini_voice,
                     # Global settings
                     default_llm_prov, default_tts_prov, default_stt_prov,
-                    default_temp, default_tokens, lang, stories_path,
+                    default_temp, default_tokens, lang, stories_path, interface_lang,
                     # Audio settings
                     noise_reduction, noise_sens, auto_cal, cal_duration
                 ):
@@ -1253,7 +1283,13 @@ def create_gradio_interface():
                         except Exception as e:
                             return f"⚠️ Settings saved but TTS service update failed: {str(e)}"
                         
-                        return "✅ All settings saved successfully! TTS services updated."
+                        # Show note about interface language if tr is selected for story language
+                        if lang == "tr" and interface_lang == "en":
+                            interface_note = "\n\n💡 For Turkish interface, use: python enhanced_app_localized.py"
+                        else:
+                            interface_note = ""
+                        
+                        return f"✅ All settings saved successfully! TTS services updated.{interface_note}"
                         
                     except Exception as e:
                         return f"❌ Error saving settings: {str(e)}"
@@ -1272,11 +1308,18 @@ def create_gradio_interface():
                         gemini_tts_model, gemini_voice_select,
                         # Global settings
                         default_llm_provider, default_tts_provider, default_stt_provider,
-                        default_temperature, default_max_tokens, language_input, stories_path_input,
+                        default_temperature, default_max_tokens, language_input, stories_path_input, interface_language_info,
                         # Audio settings
                         noise_reduction_enabled, noise_sensitivity, auto_calibrate, calibration_duration
                     ],
                     outputs=[settings_status]
+                )
+                
+                # Test custom provider connection
+                test_custom_connection_btn.click(
+                    fn=test_custom_connection_sync,
+                    inputs=[custom_provider_name, custom_api_key, custom_base_url, custom_llm_model],
+                    outputs=[custom_connection_status]
                 )
             
             # Story Collections Tab - Advanced Story Management
@@ -1700,6 +1743,53 @@ def filter_story_collection(search_query: str, category: str, voice_filter: str)
     
     except Exception as e:
         return f"<div style='color: #e74c3c; padding: 10px; background: #f8f9fa; border-radius: 5px;'>Error filtering stories: {str(e)}</div>"
+
+
+async def test_custom_provider_connection(provider_name: str, api_key: str, 
+                                         base_url: str, model_id: str) -> str:
+    """Test connection to a custom AI provider."""
+    if not provider_name.strip():
+        return "❌ Please enter a provider name"
+    
+    if not api_key.strip():
+        return "❌ Please enter an API key"
+    
+    if not base_url.strip():
+        return "❌ Please enter a base URL"
+    
+    if not model_id.strip():
+        return "❌ Please enter a model ID"
+    
+    try:
+        # Create a temporary OpenAI client with custom settings
+        test_client = openai.AsyncClient(
+            base_url=base_url,
+            api_key=api_key
+        )
+        
+        # Try a simple completion request
+        response = await test_client.chat.completions.create(
+            model=model_id,
+            messages=[{"role": "user", "content": "Hello, this is a test message."}],
+            max_tokens=10,
+            temperature=0.1
+        )
+        
+        # If we get here, the connection worked
+        return f"✅ Connection successful to {provider_name}!\nModel: {model_id}\nResponse received: ✓"
+        
+    except Exception as e:
+        return f"❌ Connection failed to {provider_name}\nError: {str(e)}"
+
+
+def test_custom_connection_sync(provider_name: str, api_key: str, 
+                               base_url: str, model_id: str) -> str:
+    """Synchronous wrapper for testing custom provider connection."""
+    import asyncio
+    try:
+        return asyncio.run(test_custom_provider_connection(provider_name, api_key, base_url, model_id))
+    except Exception as e:
+        return f"❌ Test failed: {str(e)}"
 
 
 # Export/Import and Backup Functions

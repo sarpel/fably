@@ -24,18 +24,19 @@ DEFAULT_CONFIG = {
     "elevenlabs_api_key": os.getenv("ELEVENLABS_API_KEY", ""),
     "stt_url": "https://api.openai.com/v1",
     "stt_model": "whisper-1", 
-    "llm_url": "https://api.openai.com/v1",
-    "llm_model": "gpt-4o-mini",
+    "llm_url": "https://generativelanguage.googleapis.com/v1beta",
+    "llm_model": "gemini-2.5-flash",
+    "default_llm_provider": "gemini",
     "tts_url": "https://api.openai.com/v1",
     "tts_model": "tts-1",
-    "tts_voice": "nova",
-    "tts_provider": "openai",
+    "tts_voice": "xsGHrtxT5AdDzYXTQT0d",
+    "tts_provider": "elevenlabs",
     "tts_format": "mp3",
     "elevenlabs_url": "https://api.elevenlabs.io",
     "gemini_url": "https://generativelanguage.googleapis.com/v1beta",
     "language": "tr",  # Turkish as default
-    "temperature": 1.0,
-    "max_tokens": 2000,
+    "temperature": 1.2,
+    "max_tokens": 4000,
     "stories_path": "./stories",
     "examples_path": "./fably/examples",
     "prompt_file": "./fably/prompt.txt",
@@ -1050,7 +1051,7 @@ def create_gradio_interface():
                                 
                                 default_temperature = gr.Slider(
                                     0, 2.0,
-                                    value=ctx.config["temperature"],
+                                    value=1.2,
                                     label=_('default_temperature'),
                                     info=_('temperature_info'),
                                     interactive=True
@@ -1058,7 +1059,7 @@ def create_gradio_interface():
                                 
                                 default_max_tokens = gr.Slider(
                                     100, 4000,
-                                    value=ctx.config["max_tokens"],
+                                    value=4000,
                                     label=_('default_max_tokens'),
                                     info=_('max_tokens_info'),
                                     interactive=True
@@ -1066,9 +1067,18 @@ def create_gradio_interface():
                                 
                                 language_input = gr.Textbox(
                                     label=_('language'),
-                                    value=ctx.config["language"],
+                                    value="tr",
                                     placeholder=_('language_placeholder'),
                                     info=_('language_info'),
+                                    interactive=True
+                                )
+                                
+                                # Interface Language Selector in Global Settings
+                                interface_language_selector = gr.Dropdown(
+                                    choices=get_available_languages(),
+                                    value=current_language,
+                                    label=_('language_selector'),
+                                    info="Arayüz dilini değiştir / Change interface language",
                                     interactive=True
                                 )
                                 
@@ -1164,7 +1174,7 @@ def create_gradio_interface():
                     gemini_key, gemini_url, gemini_llm, gemini_tts, gemini_voice,
                     # Global settings
                     default_llm_prov, default_tts_prov, default_stt_prov,
-                    default_temp, default_tokens, lang, stories_path,
+                    default_temp, default_tokens, lang, interface_lang, stories_path,
                     # Audio settings
                     noise_reduction, noise_sens, auto_cal, cal_duration
                 ):
@@ -1228,10 +1238,46 @@ def create_gradio_interface():
                         except Exception as e:
                             return f"⚠️  {_('all_settings_saved')} {_('error_saving_settings')}: {str(e)}"
                         
+                        # Update interface language
+                        global current_language
+                        current_language = interface_lang
+                        
                         return _('all_settings_saved')
                         
                     except Exception as e:
                         return f"❌ {_('error_saving_settings')}: {str(e)}"
+                
+                # Language change handler for Global Settings selector
+                def change_interface_language(new_lang):
+                    """Change the interface language from Global Settings"""
+                    global current_language
+                    current_language = new_lang
+                    # Return a status message in the new language
+                    if new_lang == 'tr':
+                        return "✅ Arayüz dili Türkçe olarak değiştirildi. Sayfayı yeniden yükleyin."
+                    else:
+                        return "✅ Interface language changed to English. Please reload the page."
+                
+                # Connect interface language selector to change handler
+                interface_language_selector.change(
+                    fn=change_interface_language,
+                    inputs=[interface_language_selector],
+                    outputs=[settings_status]
+                )
+                
+                # Language change handler for top selector (existing functionality)
+                def change_top_language(new_lang):
+                    """Change the interface language from top selector"""
+                    global current_language
+                    current_language = new_lang
+                    return new_lang
+                
+                # Connect top language selector
+                language_selector.change(
+                    fn=change_top_language,
+                    inputs=[language_selector],
+                    outputs=[]
+                )
                 
                 # Connect the save button to the master save function
                 save_settings_button.click(
@@ -1247,7 +1293,7 @@ def create_gradio_interface():
                         gemini_tts_model, gemini_voice_select,
                         # Global settings
                         default_llm_provider, default_tts_provider, default_stt_provider,
-                        default_temperature, default_max_tokens, language_input, stories_path_input,
+                        default_temperature, default_max_tokens, language_input, interface_language_selector, stories_path_input,
                         # Audio settings
                         noise_reduction_enabled, noise_sensitivity, auto_calibrate, calibration_duration
                     ],
