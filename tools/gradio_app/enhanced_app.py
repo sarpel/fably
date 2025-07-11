@@ -302,13 +302,19 @@ async def synthesize_with_provider(text: str, voice_spec: str) -> Tuple[int, any
     if not text.strip():
         return None
     
+    if not voice_spec:
+        voice_spec = f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}"
+    
     try:
         # Parse voice specification (provider:voice_id)
         if ":" in voice_spec:
             provider, voice_id = voice_spec.split(":", 1)
         else:
+            # If no provider specified, assume OpenAI
             provider = "openai"
             voice_id = voice_spec
+        
+        print(f"Debug: Synthesizing with provider='{provider}', voice_id='{voice_id}'")
         
         if ctx.tts_service:
             # Use enhanced TTS service
@@ -396,6 +402,22 @@ def on_story_select(selected_story: str) -> Tuple[str, str, List[gr.Textbox]]:
         return "Error loading story", f"Error: {str(e)}", []
 
 
+# Global Functions (needed by multiple tabs)
+
+def refresh_voices():
+    """Refresh the voice dropdown options."""
+    import asyncio
+    voice_options = asyncio.run(get_available_voices())
+    return gr.Dropdown(choices=voice_options)
+
+
+def initialize_voice_dropdowns():
+    """Initialize voice dropdowns with available voices."""
+    import asyncio
+    voice_options = asyncio.run(get_available_voices())
+    return voice_options
+
+
 def create_gradio_interface():
     """Create the main Gradio interface with multiple tabs."""
     
@@ -453,7 +475,7 @@ def create_gradio_interface():
                             with gr.Row():
                                 voice_select = gr.Dropdown(
                                     choices=[],  # Will be populated dynamically
-                                    value=f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}",
+                                    value=None,  # Will be set during initialization  
                                     label="TTS Voice",
                                     interactive=True,
                                     allow_custom_value=True
@@ -483,7 +505,7 @@ def create_gradio_interface():
                                     )
                                     continuation_voice = gr.Dropdown(
                                         choices=[],  # Will be populated dynamically
-                                        value=f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}",
+                                        value=None,  # Will be set during initialization
                                         label="Voice for new paragraphs",
                                         interactive=True,
                                         allow_custom_value=True
@@ -501,12 +523,6 @@ def create_gradio_interface():
                     return gr.Dropdown(
                         choices=[f"{name} | {path}" for name, path in get_story_list()]
                     )
-                
-                def refresh_voices():
-                    """Refresh the voice dropdown options."""
-                    import asyncio
-                    voice_options = asyncio.run(get_available_voices())
-                    return gr.Dropdown(choices=voice_options)
                 
                 refresh_voices_btn.click(
                     fn=refresh_voices,
@@ -655,7 +671,7 @@ def create_gradio_interface():
                         
                         new_story_voice = gr.Dropdown(
                             choices=[],  # Will be populated dynamically
-                            value=f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}",
+                            value=None,  # Will be set during initialization
                             label="🎵 TTS Voice",
                             interactive=True,
                             allow_custom_value=True
@@ -695,7 +711,13 @@ def create_gradio_interface():
                 
                 # Async wrapper for story generation
                 def generate_story_sync(query, prompt, temperature, max_tokens):
-                    return asyncio.run(generate_story_content(query, prompt, temperature, max_tokens))
+                    """Wrapper for async story generation with error handling."""
+                    if not query or not query.strip():
+                        return "❌ Please provide a story request"
+                    try:
+                        return asyncio.run(generate_story_content(query, prompt, temperature, max_tokens))
+                    except Exception as e:
+                        return f"❌ Error generating story: {str(e)}"
                 
                 generate_story_button.click(
                     fn=generate_story_sync,
@@ -705,7 +727,16 @@ def create_gradio_interface():
                 
                 # Async wrapper for TTS
                 def read_story_sync(text, voice_spec):
-                    return asyncio.run(synthesize_with_provider(text, voice_spec))
+                    """Wrapper for async TTS with error handling."""
+                    if not text or not text.strip():
+                        return None
+                    if not voice_spec:
+                        voice_spec = f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}"
+                    try:
+                        return asyncio.run(synthesize_with_provider(text, voice_spec))
+                    except Exception as e:
+                        print(f"Error in TTS: {str(e)}")
+                        return None
                 
                 read_story_button.click(
                     fn=read_story_sync,
@@ -1353,18 +1384,35 @@ def create_gradio_interface():
                 """)
         
         # Initialize voice dropdowns on startup
-        def initialize_voice_dropdowns():
+        def initialize_all_voice_dropdowns():
+            """Initialize all voice dropdowns with available voices."""
             import asyncio
             voice_options = asyncio.run(get_available_voices())
-            return voice_options
+            
+            # Find the current voice setting and set as default
+            current_voice_spec = f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}"
+            default_value = None
+            
+            # Try to find matching voice in options
+            for label, value in voice_options:
+                if value == current_voice_spec:
+                    default_value = value
+                    break
+            
+            # If no match found, use first available option
+            if not default_value and voice_options:
+                default_value = voice_options[0][1]
+            
+            return (
+                gr.Dropdown(choices=voice_options, value=default_value),  # voice_select  
+                gr.Dropdown(choices=voice_options, value=default_value),  # new_story_voice
+                gr.Dropdown(choices=voice_options, value=default_value)   # continuation_voice
+            )
         
         # Set initial voice options
         app.load(
-            fn=lambda: (
-                initialize_voice_dropdowns(),  # voice_select
-                initialize_voice_dropdowns()   # new_story_voice  
-            ),
-            outputs=[voice_select, new_story_voice]
+            fn=initialize_all_voice_dropdowns,
+            outputs=[voice_select, new_story_voice, continuation_voice]
         )
         
         return app
