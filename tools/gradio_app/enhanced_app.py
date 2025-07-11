@@ -21,6 +21,7 @@ from fably import fably, utils
 # Default configuration - can be overridden via environment variables
 DEFAULT_CONFIG = {
     "api_key": os.getenv("OPENAI_API_KEY", ""),
+    "gemini_api_key": os.getenv("GEMINI_API_KEY", ""),
     "elevenlabs_api_key": os.getenv("ELEVENLABS_API_KEY", ""),
     "stt_url": "https://api.openai.com/v1",
     "stt_model": "whisper-1", 
@@ -32,6 +33,7 @@ DEFAULT_CONFIG = {
     "tts_provider": "openai",
     "tts_format": "mp3",
     "elevenlabs_url": "https://api.elevenlabs.io",
+    "gemini_url": "https://generativelanguage.googleapis.com/v1beta",
     "language": "en",
     "temperature": 1.0,
     "max_tokens": 2000,
@@ -45,8 +47,8 @@ DEFAULT_CONFIG = {
 OPENAI_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer", "ash", "sage", "coral"]
 ELEVENLABS_VOICES = []  # Will be populated dynamically
 
-# TTS Providers
-TTS_PROVIDERS = ["openai", "elevenlabs"]
+# TTS Providers (Updated with Gemini support)
+TTS_PROVIDERS = ["openai", "elevenlabs", "gemini"]
 
 
 class EnhancedFablyContext:
@@ -97,8 +99,10 @@ class EnhancedFablyContext:
             initialize_tts_service(
                 openai_key=self.config["api_key"],
                 elevenlabs_key=self.config.get("elevenlabs_api_key"),
+                gemini_key=self.config.get("gemini_api_key"),
                 openai_url=self.config["tts_url"],
-                elevenlabs_url=self.config["elevenlabs_url"]
+                elevenlabs_url=self.config["elevenlabs_url"],
+                gemini_url=self.config.get("gemini_url", "https://generativelanguage.googleapis.com/v1beta")
             )
             self.tts_service = tts_service
             
@@ -813,11 +817,18 @@ def create_gradio_interface():
                                 gr.Markdown("#### ElevenLabs Settings")
                                 
                                 elevenlabs_model = gr.Dropdown(
-                                    choices=["eleven_monolingual_v1", "eleven_multilingual_v1", "eleven_multilingual_v2"],
-                                    value="eleven_monolingual_v1",
+                                    choices=[
+                                        "eleven_v3",
+                                        "eleven_multilingual_v2", 
+                                        "eleven_flash_v2_5",
+                                        "eleven_turbo_v2_5",
+                                        "eleven_multilingual_v1",
+                                        "eleven_monolingual_v1"
+                                    ],
+                                    value="eleven_multilingual_v2",
                                     label="ElevenLabs Model",
                                     allow_custom_value=True,
-                                    info="Voice synthesis model",
+                                    info="Voice synthesis model (v2+ recommended)",
                                     interactive=True
                                 )
                                 
@@ -867,12 +878,35 @@ def create_gradio_interface():
                                 gr.Markdown("#### Gemini Models")
                                 
                                 gemini_model = gr.Dropdown(
-                                    choices=["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"],
-                                    value="gemini-1.5-pro",
-                                    label="Gemini Model",
+                                    choices=["gemini-2.5-pro", "gemini-2.5-flash", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"],
+                                    value="gemini-2.5-flash",
+                                    label="Gemini LLM Model",
                                     allow_custom_value=True,
                                     info="Language model for story generation",
                                     interactive=True
+                                )
+                                
+                                gemini_tts_model = gr.Dropdown(
+                                    choices=["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"],
+                                    value="gemini-2.5-flash-preview-tts",
+                                    label="Gemini TTS Model",
+                                    allow_custom_value=True,
+                                    info="Text-to-speech model",
+                                    interactive=True
+                                )
+                                
+                                gemini_voice_select = gr.Dropdown(
+                                    choices=[
+                                        ("Default Voice", "default"),
+                                        ("Natural Voice", "natural"), 
+                                        ("Professional Voice", "professional"),
+                                        ("Expressive Voice", "expressive")
+                                    ],
+                                    value="default",
+                                    label="Default Gemini Voice Style",
+                                    info="Voice style for Gemini TTS",
+                                    interactive=True
+                                )
                                 )
                     
                     # Custom Provider Tab
@@ -940,7 +974,7 @@ def create_gradio_interface():
                                 )
                                 
                                 default_tts_provider = gr.Dropdown(
-                                    choices=["openai", "elevenlabs"],
+                                    choices=["openai", "elevenlabs", "gemini"],
                                     value=ctx.config["tts_provider"],
                                     label="Default TTS Provider",
                                     info="Which provider to use for speech synthesis",
