@@ -291,9 +291,6 @@ async def get_available_voices() -> List[Tuple[str, str]]:
             voice_options.append((f"{voice.capitalize()} (OpenAI)", f"openai:{voice}"))
     
     return voice_options
-            voice_options.append((f"{voice.capitalize()} (OpenAI)", f"openai:{voice}"))
-    
-    return voice_options
 
 
 async def synthesize_with_provider(text: str, voice_spec: str) -> Tuple[int, any]:
