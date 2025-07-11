@@ -1142,6 +1142,106 @@ def create_gradio_interface():
                     inputs=[elevenlabs_api_key],
                     outputs=[elevenlabs_voice_select, settings_status]
                 )
+                
+                # Master save settings function
+                def save_all_settings_master(
+                    # OpenAI settings
+                    openai_key, openai_url, openai_llm, openai_stt, openai_tts, openai_voice,
+                    # ElevenLabs settings  
+                    elevenlabs_key, elevenlabs_url, elevenlabs_model,
+                    # Gemini settings
+                    gemini_key, gemini_url, gemini_llm, gemini_tts, gemini_voice,
+                    # Global settings
+                    default_llm_prov, default_tts_prov, default_stt_prov,
+                    default_temp, default_tokens, lang, stories_path,
+                    # Audio settings
+                    noise_reduction, noise_sens, auto_cal, cal_duration
+                ):
+                    """Save all settings across all provider tabs."""
+                    try:
+                        # Update context configuration
+                        ctx.config.update({
+                            # OpenAI
+                            "api_key": openai_key,
+                            "llm_url": openai_url,
+                            "stt_url": openai_url,
+                            "tts_url": openai_url,
+                            "llm_model": openai_llm,
+                            "stt_model": openai_stt,
+                            "tts_model": openai_tts,
+                            # ElevenLabs
+                            "elevenlabs_api_key": elevenlabs_key,
+                            "elevenlabs_url": elevenlabs_url,
+                            "elevenlabs_model": elevenlabs_model,
+                            # Gemini
+                            "gemini_api_key": gemini_key,
+                            "gemini_url": gemini_url,
+                            "gemini_model": gemini_llm,
+                            "gemini_tts_model": gemini_tts,
+                            # Global settings
+                            "default_llm_provider": default_llm_prov,
+                            "tts_provider": default_tts_prov,
+                            "default_stt_provider": default_stt_prov,
+                            "temperature": default_temp,
+                            "max_tokens": default_tokens,
+                            "language": lang,
+                            "stories_path": stories_path,
+                            # Audio settings
+                            "noise_reduction": noise_reduction,
+                            "noise_sensitivity": noise_sens,
+                            "auto_calibrate": auto_cal,
+                            "calibration_duration": cal_duration
+                        })
+                        
+                        # Set the appropriate voice based on provider
+                        if default_tts_prov == "openai":
+                            ctx.config["tts_voice"] = openai_voice
+                        elif default_tts_prov == "gemini":
+                            ctx.config["tts_voice"] = gemini_voice
+                        
+                        # Reinitialize services with new settings
+                        ctx._init_clients()
+                        ctx._init_paths()
+                        
+                        # Update TTS service with new keys
+                        try:
+                            from fably.tts_service import initialize_tts_service
+                            initialize_tts_service(
+                                openai_key=openai_key if openai_key else None,
+                                elevenlabs_key=elevenlabs_key if elevenlabs_key else None,
+                                gemini_key=gemini_key if gemini_key else None,
+                                openai_url=openai_url,
+                                elevenlabs_url=elevenlabs_url,
+                                gemini_url=gemini_url
+                            )
+                        except Exception as e:
+                            return f"⚠️ Settings saved but TTS service update failed: {str(e)}"
+                        
+                        return "✅ All settings saved successfully! TTS services updated."
+                        
+                    except Exception as e:
+                        return f"❌ Error saving settings: {str(e)}"
+                
+                # Connect the save button to the master save function
+                save_settings_button.click(
+                    fn=save_all_settings_master,
+                    inputs=[
+                        # OpenAI settings
+                        openai_api_key, openai_base_url, openai_llm_model, 
+                        openai_stt_model, openai_tts_model, openai_voice_select,
+                        # ElevenLabs settings
+                        elevenlabs_api_key, elevenlabs_base_url, elevenlabs_model,
+                        # Gemini settings
+                        gemini_api_key, gemini_base_url, gemini_model,
+                        gemini_tts_model, gemini_voice_select,
+                        # Global settings
+                        default_llm_provider, default_tts_provider, default_stt_provider,
+                        default_temperature, default_max_tokens, language_input, stories_path_input,
+                        # Audio settings
+                        noise_reduction_enabled, noise_sensitivity, auto_calibrate, calibration_duration
+                    ],
+                    outputs=[settings_status]
+                )
             
             # Story Collections Tab - Advanced Story Management
             with gr.Tab("📚 Collections"):
