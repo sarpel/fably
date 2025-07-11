@@ -41,7 +41,21 @@ DEFAULT_CONFIG = {
     "stories_path": "./stories",
     "examples_path": "./fably/examples",
     "prompt_file": "./fably/prompt.txt",
-    "query_guard": ""  # No query guard - users can speak naturally
+    "query_guard": "",  # No query guard - users can speak naturally
+    # Audio Quality Settings
+    "noise_reduction": False,
+    "noise_sensitivity": 2.0,
+    "auto_calibrate": False,
+    "calibration_duration": 3.0,
+    # Wakeword Detection Settings
+    "wakeword_engine": None,  # none/ppn/onnx/tflite
+    "wakeword_model": "",     # Path to model file
+    "wakeword_sensitivity": 0.5,  # 0.0-1.0
+    # GPIO Button Settings
+    "gpio_button": False,     # Enable GPIO button
+    "button_gpio_pin": 17,    # GPIO pin number
+    "voice_cycle": False,     # Enable voice cycling
+    "hold_time": 3.0          # Long press duration
 }
 
 # Available voices from both providers  
@@ -372,8 +386,263 @@ async def synthesize_with_provider(text: str, voice_spec: str) -> Tuple[int, any
         return None
 
 
-# Story Library Tab Functions
-def on_story_select(selected_story: str) -> Tuple[str, str, List[gr.Textbox]]:
+def batch_save_paragraphs(story_path: str, paragraph_texts: List[str]) -> str:
+    """Save multiple paragraphs to disk."""
+    if not story_path:
+        return "❌ No story selected"
+    
+    try:
+        saved_count = 0
+        story_dir = Path(story_path)
+        
+        for i, text in enumerate(paragraph_texts):
+            if text and text.strip():  # Only save non-empty paragraphs
+                paragraph_file = story_dir / f"paragraph_{i}.txt"
+                utils.write_to_file(paragraph_file, text.strip())
+                saved_count += 1
+        
+        return f"✅ Saved {saved_count} paragraphs successfully"
+    except Exception as e:
+        return f"❌ Error saving paragraphs: {str(e)}"
+
+
+async def batch_regenerate_audio(story_path: str, voice: str, paragraph_texts: List[str]) -> str:
+    """Regenerate audio for multiple paragraphs."""
+    if not story_path:
+        return "❌ No story selected"
+    
+    if not voice:
+        voice = f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}"
+    
+    try:
+        regenerated_count = 0
+        story_dir = Path(story_path)
+        
+        for i, text in enumerate(paragraph_texts):
+            if text and text.strip():  # Only process non-empty paragraphs
+                try:
+                    # Update TTS voice in context
+                    ctx.config["tts_voice"] = voice
+                    
+                    # Generate audio
+                    await fably.synthesize_audio(ctx, story_dir, i, text.strip())
+                    regenerated_count += 1
+                except Exception as para_error:
+                    print(f"Error regenerating paragraph {i}: {str(para_error)}")
+                    continue
+        
+        return f"✅ Regenerated audio for {regenerated_count} paragraphs with voice '{voice}'"
+    except Exception as e:
+        return f"❌ Error regenerating audio: {str(e)}"
+
+
+def save_story_to_disk(query: str, story_text: str, voice: str) -> str:
+    """Save a new story to disk in Fably format."""
+    if not query or not story_text:
+        return "❌ Please provide both query and story content"
+    
+    try:
+        # Create story directory name from query
+        story_name = utils.create_story_name(query)
+        story_dir = ctx.stories_path / story_name
+        story_dir.mkdir(exist_ok=True)
+        
+        # Split story into paragraphs
+        paragraphs = [p.strip() for p in story_text.split('\n\n') if p.strip()]
+        
+        # Save paragraphs
+        for i, paragraph in enumerate(paragraphs):
+            paragraph_file = story_dir / f"paragraph_{i}.txt"
+            utils.write_to_file(paragraph_file, paragraph)
+        
+        # Save story metadata
+        story_info = {
+            "query": query,
+            "language": ctx.config["language"],
+            "llm_model": ctx.config["llm_model"],
+            "llm_temperature": ctx.config["temperature"],
+            "llm_max_tokens": ctx.config["max_tokens"],
+            "tts_voice": voice or ctx.config["tts_voice"],
+            "tts_provider": ctx.config["tts_provider"],
+            "paragraphs": len(paragraphs)
+        }
+        
+        info_file = story_dir / "info.yaml"
+        utils.write_to_yaml(info_file, story_info)
+        
+        return f"✅ Story saved successfully with {len(paragraphs)} paragraphs: {story_name}"
+    except Exception as e:
+        return f"❌ Error saving story: {str(e)}"
+
+
+def get_story_statistics() -> str:
+    """Generate comprehensive story statistics."""
+    try:
+        stories_list = get_story_list()
+        total_stories = len(stories_list)
+        total_paragraphs = 0
+        voice_counts = {}
+        recent_stories = []
+        
+        for name, path in stories_list:
+            story_path = Path(path)
+            
+            # Count paragraphs
+            paragraphs = list(story_path.glob("paragraph_*.txt"))
+            total_paragraphs += len(paragraphs)
+            
+            # Get voice info
+            info_file = story_path / "info.yaml"
+            if info_file.exists():
+                try:
+                    with open(info_file, 'r') as f:
+                        info = yaml.safe_load(f)
+                    voice = info.get('tts_voice', 'unknown')
+                    voice_counts[voice] = voice_counts.get(voice, 0) + 1
+                    
+                    # Check if recent (last 7 days)
+                    import time
+                    if story_path.stat().st_mtime > time.time() - (7 * 24 * 3600):
+                        recent_stories.append(name)
+                except:
+                    pass
+        
+        # Generate HTML stats
+        stats_html = f"""
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <h4>📊 Story Collection Statistics</h4>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px;">
+                <div><strong>Total Stories:</strong> {total_stories}</div>
+                <div><strong>Total Paragraphs:</strong> {total_paragraphs}</div>
+                <div><strong>Recent Stories:</strong> {len(recent_stories)}</div>
+                <div><strong>Avg Paragraphs:</strong> {total_paragraphs // total_stories if total_stories > 0 else 0}</div>
+            </div>
+            
+            <h5 style="margin-top: 15px;">🎵 Voice Usage</h5>
+            <div style="font-size: 0.9em;">
+        """
+        
+        for voice, count in sorted(voice_counts.items(), key=lambda x: x[1], reverse=True):
+            percentage = (count / total_stories * 100) if total_stories > 0 else 0
+            stats_html += f"<div>{voice}: {count} stories ({percentage:.1f}%)</div>"
+        
+        stats_html += """
+            </div>
+        </div>
+        """
+        
+        return stats_html
+    
+    except Exception as e:
+        return f"<div style='color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 5px;'>Error generating statistics: {str(e)}</div>"
+
+
+def filter_story_collection(search_query: str, category: str, voice_filter: str) -> str:
+    """Filter and display story collection based on criteria."""
+    try:
+        stories_list = get_story_list()
+        filtered_stories = []
+        
+        for name, path in stories_list:
+            story_path = Path(path)
+            include_story = True
+            
+            # Apply search filter
+            if search_query and search_query.strip():
+                query_lower = search_query.lower().strip()
+                if query_lower not in name.lower():
+                    # Check story content
+                    found_in_content = False
+                    for para_file in story_path.glob("paragraph_*.txt"):
+                        try:
+                            content = para_file.read_text().lower()
+                            if query_lower in content:
+                                found_in_content = True
+                                break
+                        except:
+                            pass
+                    if not found_in_content:
+                        include_story = False
+            
+            # Apply category filter
+            if include_story and category != "All":
+                if category == "Recent":
+                    import time
+                    if story_path.stat().st_mtime <= time.time() - (7 * 24 * 3600):
+                        include_story = False
+                elif category == "Long Stories":
+                    paragraph_count = len(list(story_path.glob("paragraph_*.txt")))
+                    if paragraph_count < 7:
+                        include_story = False
+                elif category == "Short Stories":
+                    paragraph_count = len(list(story_path.glob("paragraph_*.txt")))
+                    if paragraph_count >= 7:
+                        include_story = False
+            
+            # Apply voice filter
+            if include_story and voice_filter != "All Voices":
+                info_file = story_path / "info.yaml"
+                if info_file.exists():
+                    try:
+                        with open(info_file, 'r') as f:
+                            info = yaml.safe_load(f)
+                        story_voice = info.get('tts_voice', '')
+                        if story_voice != voice_filter:
+                            include_story = False
+                    except:
+                        include_story = False
+                else:
+                    include_story = False
+            
+            if include_story:
+                filtered_stories.append((name, path))
+        
+        # Generate HTML for filtered stories
+        if not filtered_stories:
+            return "<div style='color: #6c757d; padding: 10px;'>No stories match the current filters.</div>"
+        
+        html_content = f"""
+        <div style="max-height: 400px; overflow-y: auto;">
+            <h5>📖 Found {len(filtered_stories)} stories</h5>
+        """
+        
+        for name, path in filtered_stories[:20]:  # Limit to 20 for performance
+            story_path = Path(path)
+            paragraph_count = len(list(story_path.glob("paragraph_*.txt")))
+            
+            # Get story info
+            info_file = story_path / "info.yaml"
+            voice_info = "Unknown"
+            query_info = "Unknown"
+            if info_file.exists():
+                try:
+                    with open(info_file, 'r') as f:
+                        info = yaml.safe_load(f)
+                    voice_info = info.get('tts_voice', 'Unknown')
+                    query_info = info.get('query', 'Unknown')[:100] + "..." if len(info.get('query', '')) > 100 else info.get('query', 'Unknown')
+                except:
+                    pass
+            
+            html_content += f"""
+            <div style="border: 1px solid #dee2e6; padding: 10px; margin: 5px 0; border-radius: 5px; background: #ffffff;">
+                <div style="font-weight: bold; color: #495057;">{name}</div>
+                <div style="font-size: 0.9em; color: #6c757d; margin: 5px 0;">
+                    Query: {query_info}
+                </div>
+                <div style="font-size: 0.8em; color: #868e96;">
+                    {paragraph_count} paragraphs • Voice: {voice_info}
+                </div>
+            </div>
+            """
+        
+        if len(filtered_stories) > 20:
+            html_content += f"<div style='text-align: center; padding: 10px; color: #6c757d;'>... and {len(filtered_stories) - 20} more stories</div>"
+        
+        html_content += "</div>"
+        return html_content
+    
+    except Exception as e:
+        return f"<div style='color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 5px;'>Error filtering stories: {str(e)}</div>"
     """Handle story selection and load story details."""
     if not selected_story:
         return "No story selected", "", []
@@ -1125,6 +1394,73 @@ def create_gradio_interface():
                             info="How long to measure ambient noise"
                         )
                 
+                # Wakeword Detection & GPIO Controls
+                with gr.Row():
+                    with gr.Column():
+                        gr.Markdown("#### 🎙️ Wakeword Detection")
+                        
+                        wakeword_engine = gr.Dropdown(
+                            choices=[
+                                ("Disabled", "none"),
+                                ("PPN (Picovoice - Recommended for Pi Zero 2W)", "ppn"),
+                                ("ONNX (Custom trained models)", "onnx"), 
+                                ("TFLite (TensorFlow Lite)", "tflite")
+                            ],
+                            value=ctx.config.get("wakeword_engine", "none"),
+                            label="Wakeword Engine",
+                            info="Voice activation engine (PPN recommended for Pi Zero 2W)",
+                            interactive=True
+                        )
+                        
+                        wakeword_model = gr.Textbox(
+                            label="Wakeword Model Path",
+                            value=ctx.config.get("wakeword_model", ""),
+                            placeholder="/path/to/fably.ppn",
+                            info="Path to wakeword model file (.ppn, .onnx, .tflite)",
+                            interactive=True
+                        )
+                        
+                        wakeword_sensitivity = gr.Slider(
+                            0.0, 1.0,
+                            value=ctx.config.get("wakeword_sensitivity", 0.5),
+                            step=0.1,
+                            label="Wakeword Sensitivity",
+                            info="Detection sensitivity (0.0=strict, 1.0=sensitive)",
+                            interactive=True
+                        )
+                    
+                    with gr.Column():
+                        gr.Markdown("#### 🔘 GPIO Button Controls")
+                        
+                        gpio_button_enabled = gr.Checkbox(
+                            label="Enable GPIO Button",
+                            value=ctx.config.get("gpio_button", False),
+                            info="Use physical button as wakeword alternative"
+                        )
+                        
+                        button_gpio_pin = gr.Slider(
+                            1, 40,
+                            value=ctx.config.get("button_gpio_pin", 17),
+                            step=1,
+                            label="GPIO Pin Number",
+                            info="GPIO pin for button (default: 17)",
+                            interactive=True
+                        )
+                        
+                        voice_cycle_enabled = gr.Checkbox(
+                            label="Enable Voice Cycling",
+                            value=ctx.config.get("voice_cycle", False),
+                            info="Double-tap button to cycle between voices"
+                        )
+                        
+                        button_hold_time = gr.Slider(
+                            1.0, 10.0,
+                            value=ctx.config.get("hold_time", 3.0),
+                            step=0.5,
+                            label="Long Press Duration (seconds)",
+                            info="Hold time for shutdown command"
+                        )
+                
                 # Complete Settings Section with Save functionality
                 with gr.Row():
                     save_settings_button = gr.Button("💾 Save All Settings", variant="primary", size="lg")
@@ -1221,7 +1557,9 @@ def create_gradio_interface():
                     default_llm_prov, default_tts_prov, default_stt_prov,
                     default_temp, default_tokens, lang, stories_path, interface_lang,
                     # Audio settings
-                    noise_reduction, noise_sens, auto_cal, cal_duration
+                    noise_reduction, noise_sens, auto_cal, cal_duration,
+                    # Wakeword & GPIO settings
+                    wakeword_eng, wakeword_mod, wakeword_sens, gpio_btn, btn_gpio_pin, voice_cycle, btn_hold_time
                 ):
                     """Save all settings across all provider tabs."""
                     try:
@@ -1256,7 +1594,15 @@ def create_gradio_interface():
                             "noise_reduction": noise_reduction,
                             "noise_sensitivity": noise_sens,
                             "auto_calibrate": auto_cal,
-                            "calibration_duration": cal_duration
+                            "calibration_duration": cal_duration,
+                            # Wakeword & GPIO settings
+                            "wakeword_engine": wakeword_eng if wakeword_eng != "none" else None,
+                            "wakeword_model": wakeword_mod,
+                            "wakeword_sensitivity": wakeword_sens,
+                            "gpio_button": gpio_btn,
+                            "button_gpio_pin": btn_gpio_pin,
+                            "voice_cycle": voice_cycle,
+                            "hold_time": btn_hold_time
                         })
                         
                         # Set the appropriate voice based on provider
@@ -1289,7 +1635,14 @@ def create_gradio_interface():
                         else:
                             interface_note = ""
                         
-                        return f"✅ All settings saved successfully! TTS services updated.{interface_note}"
+                        # Show note about wakeword/GPIO if enabled
+                        hardware_note = ""
+                        if wakeword_eng != "none":
+                            hardware_note += f"\n🎙️ Wakeword detection enabled ({wakeword_eng})"
+                        if gpio_btn:
+                            hardware_note += f"\n🔘 GPIO button enabled (pin {btn_gpio_pin})"
+                        
+                        return f"✅ All settings saved successfully! TTS services updated.{interface_note}{hardware_note}"
                         
                     except Exception as e:
                         return f"❌ Error saving settings: {str(e)}"
@@ -1310,12 +1663,50 @@ def create_gradio_interface():
                         default_llm_provider, default_tts_provider, default_stt_provider,
                         default_temperature, default_max_tokens, language_input, stories_path_input, interface_language_info,
                         # Audio settings
-                        noise_reduction_enabled, noise_sensitivity, auto_calibrate, calibration_duration
+                        noise_reduction_enabled, noise_sensitivity, auto_calibrate, calibration_duration,
+                        # Wakeword & GPIO settings
+                        wakeword_engine, wakeword_model, wakeword_sensitivity, 
+                        gpio_button_enabled, button_gpio_pin, voice_cycle_enabled, button_hold_time
                     ],
                     outputs=[settings_status]
                 )
                 
                 # Test custom provider connection
+                def test_custom_provider_connection(provider_name, api_key, base_url, model_id):
+                    """Test connection to custom AI provider."""
+                    if not all([provider_name, api_key, base_url, model_id]):
+                        return "❌ Please fill all required fields (provider name, API key, base URL, model ID)"
+                    
+                    try:
+                        import asyncio
+                        import openai
+                        
+                        async def test_connection():
+                            client = openai.AsyncClient(
+                                base_url=base_url,
+                                api_key=api_key
+                            )
+                            
+                            # Test with a simple completion
+                            response = await client.chat.completions.create(
+                                model=model_id,
+                                messages=[{"role": "user", "content": "Hello"}],
+                                max_tokens=10,
+                                timeout=10.0
+                            )
+                            
+                            return f"✅ Connection successful!\nProvider: {provider_name}\nModel: {model_id}\nResponse received: {len(str(response))} characters"
+                        
+                        result = asyncio.run(test_connection())
+                        return result
+                        
+                    except Exception as e:
+                        return f"❌ Connection failed: {str(e)}\n\nPlease check:\n• API key is valid\n• Base URL is correct\n• Model ID exists\n• Network connection"
+                
+                def test_custom_connection_sync(provider_name, api_key, base_url, model_id):
+                    """Synchronous wrapper for custom connection test."""
+                    return test_custom_provider_connection(provider_name, api_key, base_url, model_id)
+                
                 test_custom_connection_btn.click(
                     fn=test_custom_connection_sync,
                     inputs=[custom_provider_name, custom_api_key, custom_base_url, custom_llm_model],

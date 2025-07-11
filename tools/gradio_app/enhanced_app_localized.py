@@ -40,7 +40,21 @@ DEFAULT_CONFIG = {
     "stories_path": "./stories",
     "examples_path": "./fably/examples",
     "prompt_file": "./fably/prompt.txt",
-    "query_guard": ""  # No query guard - users can speak naturally
+    "query_guard": "",  # No query guard - users can speak naturally
+    # Audio Quality Settings
+    "noise_reduction": False,
+    "noise_sensitivity": 2.0,
+    "auto_calibrate": False,
+    "calibration_duration": 3.0,
+    # Wakeword Detection Settings
+    "wakeword_engine": None,  # none/ppn/onnx/tflite
+    "wakeword_model": "",     # Path to model file
+    "wakeword_sensitivity": 0.5,  # 0.0-1.0
+    # GPIO Button Settings
+    "gpio_button": False,     # Enable GPIO button
+    "button_gpio_pin": 17,    # GPIO pin number
+    "voice_cycle": False,     # Enable voice cycling
+    "hold_time": 3.0          # Long press duration
 }
 
 # Available voices from both providers  
