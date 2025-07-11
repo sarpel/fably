@@ -738,14 +738,16 @@ def create_gradio_interface():
                                     value=ctx.config["api_key"],
                                     type="password",
                                     placeholder="sk-proj-...",
-                                    info="Required for OpenAI services"
+                                    info="Required for OpenAI services",
+                                    interactive=True
                                 )
                                 
                                 openai_base_url = gr.Textbox(
                                     label="OpenAI Base URL",
                                     value=ctx.config["llm_url"],
                                     placeholder="https://api.openai.com/v1",
-                                    info="Change for custom OpenAI-compatible endpoints"
+                                    info="Change for custom OpenAI-compatible endpoints",
+                                    interactive=True
                                 )
                             
                             with gr.Column():
@@ -756,14 +758,16 @@ def create_gradio_interface():
                                     value=ctx.config["llm_model"],
                                     label="Language Model",
                                     allow_custom_value=True,
-                                    info="Model for story generation"
+                                    info="Model for story generation",
+                                    interactive=True
                                 )
                                 
                                 openai_stt_model = gr.Dropdown(
                                     choices=["whisper-1"],
                                     value=ctx.config["stt_model"],
                                     label="Speech-to-Text Model",
-                                    allow_custom_value=True
+                                    allow_custom_value=True,
+                                    interactive=True
                                 )
                                 
                                 openai_tts_model = gr.Dropdown(
@@ -771,14 +775,16 @@ def create_gradio_interface():
                                     value=ctx.config["tts_model"],
                                     label="Text-to-Speech Model",
                                     allow_custom_value=True,
-                                    info="tts-1-hd for higher quality"
+                                    info="tts-1-hd for higher quality",
+                                    interactive=True
                                 )
                                 
                                 openai_voice_select = gr.Dropdown(
                                     choices=[(voice.capitalize(), voice) for voice in OPENAI_VOICES],
                                     value=ctx.config["tts_voice"] if ctx.config["tts_provider"] == "openai" else "nova",
                                     label="Default OpenAI Voice",
-                                    info="Voice for OpenAI TTS"
+                                    info="Voice for OpenAI TTS",
+                                    interactive=True
                                 )
                     
                     # ElevenLabs Provider Tab
@@ -792,13 +798,15 @@ def create_gradio_interface():
                                     value=ctx.config.get("elevenlabs_api_key", ""),
                                     type="password",
                                     placeholder="your-elevenlabs-api-key",
-                                    info="Required for ElevenLabs voices"
+                                    info="Required for ElevenLabs voices",
+                                    interactive=True
                                 )
                                 
                                 elevenlabs_base_url = gr.Textbox(
                                     label="ElevenLabs Base URL",
                                     value=ctx.config["elevenlabs_url"],
-                                    placeholder="https://api.elevenlabs.io"
+                                    placeholder="https://api.elevenlabs.io",
+                                    interactive=True
                                 )
                             
                             with gr.Column():
@@ -809,14 +817,16 @@ def create_gradio_interface():
                                     value="eleven_monolingual_v1",
                                     label="ElevenLabs Model",
                                     allow_custom_value=True,
-                                    info="Voice synthesis model"
+                                    info="Voice synthesis model",
+                                    interactive=True
                                 )
                                 
                                 elevenlabs_voice_select = gr.Dropdown(
                                     choices=[],  # Will be populated dynamically
                                     label="Default ElevenLabs Voice",
                                     info="Will load available voices from your account",
-                                    allow_custom_value=True
+                                    allow_custom_value=True,
+                                    interactive=True
                                 )
                                 
                                 load_elevenlabs_voices_btn = gr.Button("🔄 Load My ElevenLabs Voices")
@@ -842,13 +852,15 @@ def create_gradio_interface():
                                     value=ctx.config.get("gemini_api_key", ""),
                                     type="password",
                                     placeholder="AIza...",
-                                    info="Get from Google AI Studio"
+                                    info="Get from Google AI Studio",
+                                    interactive=True
                                 )
                                 
                                 gemini_base_url = gr.Textbox(
                                     label="Gemini Base URL",
                                     value="https://generativelanguage.googleapis.com/v1beta",
-                                    placeholder="https://generativelanguage.googleapis.com/v1beta"
+                                    placeholder="https://generativelanguage.googleapis.com/v1beta",
+                                    interactive=True
                                 )
                             
                             with gr.Column():
@@ -859,7 +871,8 @@ def create_gradio_interface():
                                     value="gemini-1.5-pro",
                                     label="Gemini Model",
                                     allow_custom_value=True,
-                                    info="Language model for story generation"
+                                    info="Language model for story generation",
+                                    interactive=True
                                 )
                     
                     # Custom Provider Tab
@@ -872,36 +885,42 @@ def create_gradio_interface():
                                 custom_provider_name = gr.Textbox(
                                     label="Provider Name",
                                     placeholder="My Custom LLM",
-                                    info="Friendly name for this provider"
+                                    info="Friendly name for this provider",
+                                    interactive=True
                                 )
                                 
                                 custom_api_key = gr.Textbox(
                                     label="API Key",
                                     type="password",
-                                    placeholder="your-custom-api-key"
+                                    placeholder="your-custom-api-key",
+                                    interactive=True
                                 )
                                 
                                 custom_base_url = gr.Textbox(
                                     label="Base URL",
                                     placeholder="http://localhost:1234/v1",
-                                    info="Full API endpoint URL"
+                                    info="Full API endpoint URL",
+                                    interactive=True
                                 )
                             
                             with gr.Column():
                                 custom_llm_model = gr.Textbox(
                                     label="Language Model ID",
                                     placeholder="llama-3.1-8b-instruct",
-                                    info="Model identifier for this endpoint"
+                                    info="Model identifier for this endpoint",
+                                    interactive=True
                                 )
                                 
                                 custom_stt_model = gr.Textbox(
                                     label="STT Model ID (optional)",
-                                    placeholder="whisper-1"
+                                    placeholder="whisper-1",
+                                    interactive=True
                                 )
                                 
                                 custom_tts_model = gr.Textbox(
                                     label="TTS Model ID (optional)",
-                                    placeholder="tts-1"
+                                    placeholder="tts-1",
+                                    interactive=True
                                 )
                                 
                                 test_custom_connection_btn = gr.Button("🔍 Test Connection")
@@ -916,21 +935,24 @@ def create_gradio_interface():
                                     choices=["openai", "gemini", "custom"],
                                     value="openai",
                                     label="Default Language Model Provider",
-                                    info="Which provider to use for story generation"
+                                    info="Which provider to use for story generation",
+                                    interactive=True
                                 )
                                 
                                 default_tts_provider = gr.Dropdown(
                                     choices=["openai", "elevenlabs"],
                                     value=ctx.config["tts_provider"],
                                     label="Default TTS Provider",
-                                    info="Which provider to use for speech synthesis"
+                                    info="Which provider to use for speech synthesis",
+                                    interactive=True
                                 )
                                 
                                 default_stt_provider = gr.Dropdown(
                                     choices=["openai", "custom"],
                                     value="openai",
                                     label="Default STT Provider",
-                                    info="Which provider to use for speech recognition"
+                                    info="Which provider to use for speech recognition",
+                                    interactive=True
                                 )
                             
                             with gr.Column():
@@ -940,19 +962,33 @@ def create_gradio_interface():
                                     0, 2.0,
                                     value=ctx.config["temperature"],
                                     label="Default Temperature",
-                                    info="Creativity level (0=focused, 2=very creative)"
+                                    info="Creativity level (0=focused, 2=very creative)",
+                                    interactive=True
                                 )
                                 
                                 default_max_tokens = gr.Slider(
                                     100, 4000,
                                     value=ctx.config["max_tokens"],
                                     label="Default Max Tokens",
-                                    info="Maximum length of generated stories"
+                                    info="Maximum length of generated stories",
+                                    interactive=True
                                 )
                                 
                                 language_input = gr.Textbox(
                                     label="Language",
                                     value=ctx.config["language"],
+                                    placeholder="tr",
+                                    info="Language code for stories (tr, en, etc.)",
+                                    interactive=True
+                                )
+                                
+                                stories_path_input = gr.Textbox(
+                                    label="Stories Directory",
+                                    value=ctx.config["stories_path"],
+                                    placeholder="./stories",
+                                    info="Directory where stories are saved",
+                                    interactive=True
+                                )
                                     placeholder="tr",
                                     info="Language code for stories (tr, en, etc.)"
                                 )
