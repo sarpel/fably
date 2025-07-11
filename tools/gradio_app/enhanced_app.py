@@ -1231,10 +1231,9 @@ def create_gradio_interface():
         app.load(
             fn=lambda: (
                 initialize_voice_dropdowns(),  # voice_select
-                initialize_voice_dropdowns(),  # new_story_voice  
-                initialize_voice_dropdowns()   # default_voice_input
+                initialize_voice_dropdowns()   # new_story_voice  
             ),
-            outputs=[voice_select, new_story_voice, default_voice_input]
+            outputs=[voice_select, new_story_voice]
         )
         
         return app
