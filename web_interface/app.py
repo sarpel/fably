@@ -496,12 +496,9 @@ def create_fably_interface():
                                 elevenlabs_base_url = gr.Textbox(label="ElevenLabs Temel URL", value=ctx.config["elevenlabs_url"], interactive=True)
                             with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### ElevenLabs Ayarlari")
-                                elevenlabs_model = gr.Dropdown(choices=[], label="ElevenLabs Modeli", interactive=True, value=ctx.config.get("elevenlabs_model", "eleven_multilingual_v2"), allow_custom_value=True)
-                                elevenlabs_model_status = gr.Textbox(label="Model Yükleme Durumu", interactive=False)
                                 elevenlabs_voice_select = gr.Dropdown(choices=[], label="Varsayilan ElevenLabs Sesi", interactive=True)
                                 elevenlabs_voice_status = gr.Textbox(label="Ses Yükleme Durumu", interactive=False)
                                 load_elevenlabs_voices_btn = gr.Button("ElevenLabs Seslerimi Yukle")
-                                load_elevenlabs_models_btn = gr.Button("ElevenLabs Modellerimi Yükle")
                     
                     with gr.Tab("Google Gemini"):
                         with gr.Row():
@@ -692,29 +689,6 @@ def create_fably_interface():
                 return gr.update(choices=[], value=None, visible=True), "❌ Ses bulunamadı."
             return gr.update(choices=valid_voices, value=valid_voices[0][1], visible=True), f"✅ {len(valid_voices)} ElevenLabs sesi yüklendi."
 
-        def fetch_elevenlabs_models(api_key, base_url):
-            """ElevenLabs API'den mevcut TTS modellerini dinamik olarak çek."""
-            url = f"{base_url.rstrip('/')}/models"
-            headers = {"xi-api-key": api_key}
-            try:
-                resp = requests.get(url, headers=headers, timeout=10)
-                resp.raise_for_status()
-                data = resp.json()
-                # API'nin model döndürme formatına göre uyarlanmalı
-                models = data.get("models", [])
-                return [(m.get("name", m.get("model_id", "Unknown")), m.get("model_id", "")) for m in models]
-            except Exception as e:
-                return [(f"API Hatası: {str(e)}", "")]
-
-        def handle_load_elevenlabs_models(api_key, base_url):
-            if not api_key or not base_url:
-                return gr.update(choices=[], value=None, label="Varsayılan ElevenLabs Modeli", visible=True), "❌ API anahtarı veya URL eksik."
-            models = fetch_elevenlabs_models(api_key, base_url)
-            valid_models = [(name, mid) for name, mid in models if mid]
-            if not valid_models:
-                return gr.update(choices=[], value=None, visible=True), "❌ Model bulunamadı."
-            return gr.update(choices=valid_models, value=valid_models[0][1], visible=True), f"✅ {len(valid_models)} ElevenLabs modeli yüklendi."
-
         def initialize_voice_dropdowns():
             voice_options = asyncio.run(get_available_voices())
             current_voice_spec = f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}"
@@ -781,7 +755,7 @@ def create_fably_interface():
         # Settings Tab
         settings_inputs = [
             openai_api_key, openai_base_url, openai_llm_model, openai_tts_model,
-            elevenlabs_api_key, elevenlabs_base_url, elevenlabs_model,
+            elevenlabs_api_key, elevenlabs_base_url,
             gemini_api_key, gemini_base_url, gemini_model,
             default_llm_provider, default_tts_provider,
             default_temperature, default_max_tokens,
@@ -800,12 +774,10 @@ def create_fably_interface():
             inputs=[elevenlabs_api_key, elevenlabs_base_url],
             outputs=[elevenlabs_voice_select, elevenlabs_voice_status]
         )
-
-        # ElevenLabs models button handler
-        load_elevenlabs_models_btn.click(
-            fn=handle_load_elevenlabs_models,
-            inputs=[elevenlabs_api_key, elevenlabs_base_url],
-            outputs=[elevenlabs_model, elevenlabs_model_status]
+        # Also update new_story_voice dropdown when voices are loaded
+        load_elevenlabs_voices_btn.click(
+            fn=refresh_voices,
+            outputs=[new_story_voice]
         )
 
         # Initial loading actions
