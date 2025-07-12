@@ -9,6 +9,7 @@ import gradio as gr
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict, Any
 from gradio.themes import Soft
+import requests
 
 # Add the parent directory to the system path to allow for module imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -609,6 +610,23 @@ def create_fably_interface():
         def refresh_story_list():
             return gr.Dropdown(choices=[f"{name} | {path}" for name, path in get_story_list()])
 
+        def fetch_elevenlabs_voices(api_key, base_url):
+            url = f"{base_url.rstrip('/')}/voices"
+            headers = {"xi-api-key": api_key}
+            try:
+                resp = requests.get(url, headers=headers, timeout=10)
+                resp.raise_for_status()
+                data = resp.json()
+                voices = data.get("voices", [])
+                return [(v.get("name", v.get("voice_id", "Unknown")), v.get("voice_id", "")) for v in voices]
+            except Exception as e:
+                return [(f"API Hatası: {str(e)}", "")]
+
+        def handle_load_elevenlabs_voices(api_key, base_url):
+            if not api_key or not base_url:
+                return [("API anahtarı veya URL eksik", "")]
+            return fetch_elevenlabs_voices(api_key, base_url)
+
         def initialize_voice_dropdowns():
             voice_options = asyncio.run(get_available_voices())
             current_voice_spec = f"{ctx.config['tts_provider']}:{ctx.config['tts_voice']}"
@@ -686,6 +704,13 @@ def create_fably_interface():
             fn=handle_settings_save,
             inputs=settings_inputs,
             outputs=[settings_status]
+        )
+
+        # ElevenLabs voices button handler
+        load_elevenlabs_voices_btn.click(
+            fn=handle_load_elevenlabs_voices,
+            inputs=[elevenlabs_api_key, elevenlabs_base_url],
+            outputs=[elevenlabs_voice_select]
         )
 
         # Initial loading actions
