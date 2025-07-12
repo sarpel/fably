@@ -2,7 +2,7 @@
 TTS Service Abstraction Layer
 
 This module provides a unified interface for multiple Text-to-Speech providers,
-including OpenAI and ElevenLabs. It allows seamless switching between providers
+including ElevenLabs (and Gemini placeholder). It allows seamless switching between providers
 while maintaining consistent functionality.
 """
 
@@ -10,7 +10,7 @@ import asyncio
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import requests
 import soundfile as sf
@@ -151,7 +151,7 @@ class ElevenLabsTTSProvider(TTSProvider):
 
 
 class GeminiTTSProvider(TTSProvider):
-    """Google Gemini TTS provider implementation."""
+    """Google Gemini TTS provider implementation (placeholder)."""
     
     # Note: Gemini doesn't have a direct TTS API yet (as of 2025)
     # This is a placeholder for future integration or third-party solutions
@@ -203,7 +203,7 @@ class TTSService:
     
     def __init__(self):
         self.providers: Dict[str, TTSProvider] = {}
-        self.default_provider = "openai"
+        self.default_provider = "elevenlabs"
         self.default_voice = "nova"
         self.default_format = "mp3"
     
@@ -220,8 +220,7 @@ class TTSService:
         else:
             raise ValueError(f"Provider '{provider_name}' not found")
     
-    async def synthesize(self, text: str, voice: str = None, provider: str = None, 
-                        output_file: Path = None, **kwargs) -> Optional[Path]:
+    async def synthesize(self, text: str, voice: str, provider: str, output_file: Optional[Path] = None, **kwargs) -> Union[Path, bytes, None]:
         """
         Synthesize speech from text.
         
@@ -235,8 +234,14 @@ class TTSService:
         Returns:
             Path to saved audio file if output_file specified, None otherwise
         """
-        provider_name = provider or self.default_provider
-        voice_id = voice or self.default_voice
+        if text is None:
+            raise ValueError("text parameter cannot be None")
+        if voice is None:
+            raise ValueError("voice parameter cannot be None")
+        if provider is None:
+            raise ValueError("provider parameter cannot be None")
+        provider_name = provider
+        voice_id = voice
         
         if provider_name not in self.providers:
             raise ValueError(f"Provider '{provider_name}' not available")
@@ -246,7 +251,7 @@ class TTSService:
         try:
             audio_data = await provider_instance.synthesize(text, voice_id, **kwargs)
             
-            if output_file:
+            if output_file is not None:
                 # Write audio data to file
                 with open(output_file, "wb") as f:
                     f.write(audio_data)
@@ -298,17 +303,11 @@ class TTSService:
 tts_service = TTSService()
 
 
-def initialize_tts_service(openai_key: str = None, elevenlabs_key: str = None,
+def initialize_tts_service(elevenlabs_key: str = None,
                           gemini_key: str = None,
-                          openai_url: str = "https://api.openai.com/v1",
                           elevenlabs_url: str = "https://api.elevenlabs.io",
                           gemini_url: str = "https://generativelanguage.googleapis.com/v1beta"):
-    """Initialize the global TTS service with available providers."""
-    
-    if openai_key:
-        openai_provider = OpenAITTSProvider(openai_key, openai_url)
-        tts_service.add_provider("openai", openai_provider)
-        logging.info("OpenAI TTS provider initialized")
+    """Initialize the global TTS service with available providers (OpenAI removed)."""
     
     if elevenlabs_key:
         try:
@@ -320,18 +319,17 @@ def initialize_tts_service(openai_key: str = None, elevenlabs_key: str = None,
     
     if gemini_key:
         try:
-            # Note: Gemini TTS is not yet available, this is a placeholder
             gemini_provider = GeminiTTSProvider(gemini_key, gemini_url)
             tts_service.add_provider("gemini", gemini_provider)
             logging.info("Gemini TTS provider initialized (placeholder - not functional yet)")
         except Exception as e:
             logging.warning(f"Failed to initialize Gemini provider: {str(e)}")
     
-    # Set default provider preference (ElevenLabs if available, otherwise OpenAI)
+    # Set default provider preference (ElevenLabs if available)
     if "elevenlabs" in tts_service.providers:
         tts_service.set_default_provider("elevenlabs")
-    elif "openai" in tts_service.providers:
-        tts_service.set_default_provider("openai")
+    elif "gemini" in tts_service.providers:
+        tts_service.set_default_provider("gemini")
     else:
         logging.warning("No functional TTS providers available")
 
@@ -341,7 +339,12 @@ async def list_all_voices() -> Dict[str, List[Dict[str, str]]]:
     return await tts_service.get_all_voices()
 
 
-async def synthesize_with_voice(text: str, voice: str, provider: str = None, 
-                               output_file: Path = None, **kwargs) -> Optional[Path]:
+async def synthesize_with_voice(text: str, voice: str, provider: str, output_file: Optional[Path] = None, **kwargs) -> Union[Path, bytes, None]:
     """Convenience function for voice synthesis."""
+    if text is None:
+        raise ValueError("text parameter cannot be None")
+    if voice is None:
+        raise ValueError("voice parameter cannot be None")
+    if provider is None:
+        raise ValueError("provider parameter cannot be None")
     return await tts_service.synthesize(text, voice, provider, output_file, **kwargs)

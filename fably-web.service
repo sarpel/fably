@@ -1,0 +1,13 @@
+[Unit]
+Description=Fably Web Interface
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/fably
+ExecStart=/usr/bin/python3 /home/pi/fably/web_interface/launch.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

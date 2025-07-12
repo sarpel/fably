@@ -5,7 +5,7 @@ Handles Windows/Linux path differences and ensures compatibility
 
 import os
 import sys
-from pathlib import Path, PurePosixPath, PureWindowsPath
+from pathlib import Path
 import logging
 
 
@@ -217,28 +217,11 @@ def get_default_configs():
 
 if __name__ == "__main__":
     # Test ve düzeltme scripti
-    print("🔧 Fably Cross-Platform Compatibility Check")
-    print("=" * 50)
-    
+    # Tüm print satırlarını kaldır
     # Platform bilgileri
     platform_info = get_platform_info()
-    print(f"Platform: {platform_info['system']}")
-    print(f"OS: {platform_info['os_name']}")
-    print(f"Windows: {platform_info['is_windows']}")
-    print(f"Linux: {platform_info['is_linux']}")
-    print(f"Raspberry Pi: {platform_info['is_raspberry_pi']}")
-    print(f"Path Separator: '{platform_info['path_separator']}'")
-    print(f"Line Separator: {repr(platform_info['line_separator'])}")
-    print()
-    
     # Path bilgileri
     paths = get_fably_paths()
-    print("📁 Fably Paths:")
-    for name, path in paths.items():
-        exists = "✅" if path.exists() else "❌"
-        print(f"  {name}: {exists} {path}")
-    print()
-    
     # Python dosyalarını düzelt
     print("🔧 Fixing Python files for Linux compatibility...")
     fixed_count = fix_python_files_for_linux()

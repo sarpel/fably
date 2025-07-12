@@ -306,7 +306,6 @@ install_system_packages() {
                 python3 python3-pip python3-venv python3-dev python3-setuptools python3-wheel \
                 libportaudio2 portaudio19-dev libsndfile1 libsndfile1-dev \
                 mpg123 alsa-utils ffmpeg espeak espeak-data \
-                python3-gpiozero python3-rpi.gpio \
                 i2c-tools spi-tools
             ;;
         "linux")
@@ -371,16 +370,7 @@ install_fably_dependencies() {
     # Platform-specific packages
     if [[ $SYSTEM == "raspberry_pi"* ]]; then
         log "Installing Raspberry Pi packages..."
-        pip install gpiozero RPi.GPIO apa102-pi || warn "Some GPIO packages failed (may be normal)"
-        
-        # Wakeword engines based on Pi model
-        if [[ $PI_MODEL == "5" || $PI_MODEL == "4" ]]; then
-            pip install onnxruntime pvporcupine || warn "Some wakeword engines failed"
-        else
-            pip install pvporcupine onnxruntime || warn "Some wakeword engines failed"
-        fi
-    else
-        pip install onnxruntime || warn "ONNX Runtime installation failed"
+        # (GPIO, wakeword ve legacy bağımlılıklar kaldırıldı)
     fi
     
     # Web interface dependencies
@@ -472,6 +462,31 @@ EOF
         sudo systemctl enable fably.service
         success "Fably service installed and enabled"
     fi
+}
+
+setup_fably_web_service() {
+    header "Setting up Fably Web Interface systemd service"
+    USER_NAME=$(whoami)
+    SERVICE_PATH="/etc/systemd/system/fably-web.service"
+    sudo tee $SERVICE_PATH > /dev/null << EOF
+[Unit]
+Description=Fably Web Interface
+After=network.target
+
+[Service]
+Type=simple
+User=$USER_NAME
+WorkingDirectory=$FABLY_ROOT
+ExecStart=/usr/bin/python3 $FABLY_ROOT/web_interface/launch.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    sudo systemctl daemon-reload
+    sudo systemctl enable fably-web.service
+    sudo systemctl restart fably-web.service
+    success "Fably web interface service installed, enabled, and started."
 }
 
 # ================================================================================
@@ -598,7 +613,6 @@ run_fably_diagnostics() {
     python3 << 'EOF'
 try:
     import fably
-    from fably.utils import play_sound
     from fably.cli import cli
     print("✅ Fably imports successful")
 except Exception as e:
@@ -744,6 +758,7 @@ install_complete() {
     create_directories
     setup_environment_file
     setup_systemd_service
+    setup_fably_web_service
     
     if [[ $REBOOT_REQUIRED == true ]]; then
         warn "🔄 REBOOT REQUIRED for hardware changes to take effect"

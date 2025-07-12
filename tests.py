@@ -1,4 +1,110 @@
-py',
+import subprocess
+import asyncio
+import time
+from pathlib import Path
+import click
+import os
+
+# Deprecated and unused imports
+# from fably.utils import ensure_stories_directory
+# from fably.cli import load_configuration
+# from fably.utils import get_sound_file_path
+# from fably import cli, utils
+
+# Tüm print satırlarını kaldır
+
+
+def test_imports():
+    """Test basic imports"""
+    print("\n🔄 Testing basic imports...")
+    
+    try:
+        import fably
+        import gradio as gr
+        import gpiozero
+        import psutil
+        
+        print("✅ All essential imports successful")
+        return True
+    except ImportError as e:
+        print(f"❌ Import error: {e}")
+        print("   Try: pip install -r requirements.txt")
+        return False
+
+
+def test_audio_dependencies():
+    """Test audio-related dependencies"""
+    print("\n🔊 Testing audio dependencies...")
+    
+    try:
+        import sounddevice
+        import soundfile
+        import numpy
+        print("✅ Audio dependencies successful")
+        return True
+    except ImportError as e:
+        print(f"❌ Audio dependency error: {e}")
+        print("   Try: pip install sounddevice soundfile numpy")
+        return False
+
+
+def test_ai_dependencies():
+    """Test AI-related dependencies"""
+    print("\n🤖 Testing AI dependencies...")
+    
+    try:
+        import openai
+        print("✅ AI dependencies successful")
+        return True
+    except ImportError as e:
+        print(f"❌ AI dependency error: {e}")
+        print("   Try: pip install openai")
+        return False
+
+
+def test_environment_config():
+    """Test environment configuration"""
+    print("\n🌐 Testing environment configuration...")
+    
+    try:
+        # Check if fably command is available
+        result = subprocess.run(['fably', '--help'], 
+                              capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            print("✅ fably command available")
+        else:
+            print(f"❌ fably command failed: {result.stderr}")
+            return False
+        
+        # Check if required environment variables are set
+        required_vars = ['OPENAI_API_KEY']
+        missing_vars = [var for var in required_vars if os.getenv(var) is None]
+        
+        if missing_vars:
+            print(f"⚠️  Missing required environment variables: {', '.join(missing_vars)}")
+            print("   Set them in your .env file or system environment.")
+            return False
+        else:
+            print("✅ Environment variables check passed")
+        
+        return True
+    except subprocess.TimeoutExpired:
+        print("❌ fably command timed out")
+        return False
+    except FileNotFoundError:
+        print("❌ fably command not found")
+        print("   Try: pip install --editable .")
+        return False
+    except Exception as e:
+        print(f"❌ Environment config test failed: {e}")
+        return False
+
+
+def test_file_structure():
+    """Test file structure and essential files"""
+    print("\n📁 Testing file structure...")
+    
+    essential_files = [
         'fably/voice_manager.py',
         'fably/tts_service.py',
         'web_interface/app.py',

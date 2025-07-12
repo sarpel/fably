@@ -436,12 +436,16 @@ def cli(
     
     # Initialize TTS service with available providers
     try:
-        initialize_tts_service(
-            openai_key=ctx.api_key,
-            elevenlabs_key=ctx.elevenlabs_api_key,
-            openai_url=ctx.tts_url,
-            elevenlabs_url=ctx.elevenlabs_url
-        )
+        # Prepare arguments for initialize_tts_service, only pass if not None
+        tts_args = {}
+        if ctx.elevenlabs_api_key:
+            tts_args['elevenlabs_key'] = ctx.elevenlabs_api_key
+        if ctx.elevenlabs_url:
+            tts_args['elevenlabs_url'] = ctx.elevenlabs_url
+        if ctx.gemini_api_key:
+            tts_args['gemini_key'] = ctx.gemini_api_key
+        tts_args['gemini_url'] = GEMINI_URL
+        initialize_tts_service(**tts_args)
         
         # Set the TTS service in context
         ctx.tts_service = tts_service
@@ -481,9 +485,6 @@ def cli(
         web_interface_path = os.path.join(os.path.dirname(__file__), "..", "web_interface", "launch.py")
         
         if os.path.exists(web_interface_path):
-            print("Fably Profesyonel Web Arayuzu baslatiliyor...")
-            print("Adres: http://localhost:7860")
-            print("Varsayilan dil: Turkce")
             subprocess.run([sys.executable, web_interface_path])
         else:
             # Fallback to old enhanced app if exists
@@ -491,10 +492,8 @@ def cli(
             basic_app_path = os.path.join(os.path.dirname(__file__), "..", "tools", "gradio_app", "app.py")
             
             if os.path.exists(enhanced_app_path):
-                print("Eski Enhanced Fably Web Uygulamasi baslatiliyor...")
                 subprocess.run([sys.executable, enhanced_app_path])
             elif os.path.exists(basic_app_path):
-                print("Temel Fably Web Uygulamasi baslatiliyor...")
                 subprocess.run([sys.executable, basic_app_path])
             else:
                 print("Web arayuzu bulunamadi. Lutfen web_interface/ dizinini kontrol edin.")
@@ -549,7 +548,7 @@ async def handle_list_voices():
         print(f"❌ Error listing voices: {str(e)}")
 
 
-async def handle_voice_preview(voice_id: str, provider: str = None):
+async def handle_voice_preview(voice_id: str, provider: str = "elevenlabs"):
     """Handle the --voice-preview command."""
     print(f"\n🎧 Generating voice preview for: {voice_id}")
     

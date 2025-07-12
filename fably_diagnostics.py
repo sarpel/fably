@@ -20,19 +20,8 @@ def run_command(cmd, capture_output=True):
     except Exception as e:
         return False, "", str(e)
 
-def print_header(text):
-    print(f"\n{'='*60}")
-    print(f"  {text}")
-    print(f"{'='*60}")
-
-def print_status(success, message):
-    status = "✅" if success else "❌"
-    print(f"{status} {message}")
-
 def detect_system_info():
     """Detect system and hardware information"""
-    print_header("System Detection")
-    
     system_info = {
         'platform': sys.platform,
         'is_raspberry_pi': False,
@@ -48,24 +37,19 @@ def detect_system_info():
             cpuinfo = f.read()
         if "Raspberry Pi" in cpuinfo:
             system_info['is_raspberry_pi'] = True
-            print("✅ Running on Raspberry Pi")
             
             if "Pi Zero 2" in cpuinfo:
                 system_info['pi_model'] = "Zero 2W"
-                print("✅ Detected Pi Zero 2W")
             elif "Pi 5" in cpuinfo:
                 system_info['pi_model'] = "5"
-                print("✅ Detected Pi 5")
             elif "Pi 4" in cpuinfo:
                 system_info['pi_model'] = "4"
-                print("✅ Detected Pi 4")
             else:
                 system_info['pi_model'] = "Unknown"
-                print("✅ Detected Raspberry Pi (model unknown)")
         else:
-            print(f"✅ Running on {sys.platform}")
+            system_info['is_raspberry_pi'] = False
     except FileNotFoundError:
-        print(f"✅ Running on {sys.platform}")
+        system_info['is_raspberry_pi'] = False
     except Exception as e:
         print(f"❌ Could not detect system type: {e}")
     
@@ -73,23 +57,17 @@ def detect_system_info():
 
 def check_audio_hardware(system_info):
     """Check for audio hardware and drivers"""
-    print_header("Audio Hardware Detection")
-    
     # Check ALSA devices
     success, stdout, stderr = run_command("aplay -l")
     if success:
         if "IQaudIOCODEC" in stdout:
             system_info['has_iqaudio'] = True
-            print("✅ IQaudio Codec Zero detected")
-            print("   Card name: IQaudIOCODEC")
         
         if "seeed" in stdout.lower() or "respeaker" in stdout.lower():
             system_info['has_respeaker'] = True
-            print("✅ reSpeaker HAT detected")
         
         if "USB Audio" in stdout or "Card 1" in stdout:
             system_info['has_usb_audio'] = True
-            print("✅ USB Audio device detected")
         
         if not any([system_info['has_iqaudio'], system_info['has_respeaker'], system_info['has_usb_audio']]):
             print("✅ Using built-in audio (HDMI/3.5mm jack)")
@@ -110,8 +88,6 @@ def check_audio_hardware(system_info):
 
 def check_configuration_files(system_info):
     """Check system configuration files"""
-    print_header("Configuration Check")
-    
     # Check config.txt (Raspberry Pi)
     if system_info['is_raspberry_pi']:
         config_files = ["/boot/firmware/config.txt", "/boot/config.txt"]
@@ -129,8 +105,8 @@ def check_configuration_files(system_info):
                     audio_disabled = "dtparam=audio=off" in config_content or "#dtparam=audio=on" in config_content
                     iqaudio_enabled = "dtoverlay=iqaudio-codec" in config_content
                     
-                    print_status(audio_disabled, "Built-in audio disabled")
-                    print_status(iqaudio_enabled, "IQaudio overlay configured")
+                    print("✅ Built-in audio disabled" if audio_disabled else "❌ Built-in audio enabled")
+                    print("✅ IQaudio overlay configured" if iqaudio_enabled else "❌ IQaudio overlay not configured")
                     
                     if system_info['has_iqaudio'] and not iqaudio_enabled:
                         print("   🔧 Need to add: dtoverlay=iqaudio-codec")
@@ -165,8 +141,6 @@ def check_configuration_files(system_info):
 
 def test_audio_functionality():
     """Test audio playback functionality"""
-    print_header("Audio Functionality Test")
-    
     # Test amixer access
     success, stdout, stderr = run_command("amixer info 2>/dev/null")
     if success:
@@ -197,7 +171,6 @@ def test_audio_functionality():
     if test_file:
         print(f"Testing audio playback with: {test_file}")
         for cmd in test_commands:
-            print(f"  Trying: {cmd}")
             success, stdout, stderr = run_command(f"timeout 3 {cmd} '{test_file}' 2>/dev/null")
             if success:
                 print(f"  ✅ Audio test successful with: {cmd}")
@@ -211,9 +184,6 @@ def test_audio_functionality():
 
 def check_python_environment():
     """Check Python environment and Fably installation"""
-    print_header("Python Environment Check")
-    
-    # Check Python version
     print(f"✅ Python version: {sys.version}")
     
     # Check virtual environment
@@ -257,8 +227,6 @@ def check_python_environment():
 
 def check_api_configuration():
     """Check API keys and configuration"""
-    print_header("API Configuration Check")
-    
     # Check .env file
     if os.path.exists(".env"):
         print("✅ .env file exists")
@@ -295,8 +263,6 @@ def check_api_configuration():
 
 def test_fably_functionality():
     """Test basic Fably functionality"""
-    print_header("Fably Functionality Test")
-    
     # Check if we can import Fably components
     try:
         from fably import utils, cli
@@ -325,8 +291,6 @@ def test_fably_functionality():
 
 def generate_recommendations(system_info):
     """Generate specific recommendations based on findings"""
-    print_header("Recommendations & Quick Fixes")
-    
     recommendations = []
     
     # Audio-specific recommendations
@@ -372,7 +336,7 @@ def generate_recommendations(system_info):
 
 def main():
     """Main diagnostic function"""
-    print_header("Fably Comprehensive Diagnostic Tool")
+    print("Fably Comprehensive Diagnostic Tool")
     print("This tool will check your Fably installation and configuration")
     
     # Run all diagnostic checks
@@ -385,7 +349,7 @@ def main():
     test_fably_functionality()
     generate_recommendations(system_info)
     
-    print_header("Diagnostic Complete")
+    print("Diagnostic Complete")
     print("If you see any ❌ errors above, follow the recommendations to fix them.")
     print("For comprehensive setup, run: ./fably-setup.sh install")
 
