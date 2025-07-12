@@ -20,7 +20,7 @@ from fably.voice_manager import voice_manager
 from fably.cli_utils import pass_context
 
 OPENAI_URL = "https://api.openai.com/v1"
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta"
 DEEPSEEK_URL = "https://api.deepseek.com/v1"
 OLLAMA_URL = "http://127.0.0.1:11434/v1"
 ELEVENLABS_URL = "https://api.elevenlabs.io"

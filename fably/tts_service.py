@@ -209,103 +209,41 @@ class ElevenLabsTTSProvider(TTSProvider):
 class GeminiTTSProvider(TTSProvider):
     """Google Gemini TTS provider implementation."""
     
+    # Note: Gemini doesn't have a direct TTS API yet (as of 2025)
+    # This is a placeholder for future integration or third-party solutions
     AVAILABLE_MODELS = {
-        "gemini-2.5-flash-preview-tts": {
-            "name": "Gemini 2.5 Flash Preview TTS",
-            "description": "Price-performant text-to-speech model with high control",
-            "character_limit": 8000,
-            "features": ["structured_workflows", "podcast_generation", "audiobooks"]
-        },
-        "gemini-2.5-pro-preview-tts": {
-            "name": "Gemini 2.5 Pro Preview TTS", 
-            "description": "Most powerful text-to-speech model with high control",
-            "character_limit": 8000,
-            "features": ["premium_quality", "structured_workflows", "audiobooks"]
+        "gemini-tts-placeholder": {
+            "name": "Gemini TTS (Placeholder)",
+            "description": "Placeholder for future Gemini TTS integration",
+            "character_limit": 1000,
+            "features": ["placeholder"]
         }
     }
     
-    SUPPORTED_FORMATS = ["mp3", "wav", "flac"]
+    SUPPORTED_FORMATS = ["wav"]
     
     def __init__(self, api_key: str, base_url: str = "https://generativelanguage.googleapis.com/v1beta"):
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
-        self.default_model = "gemini-2.5-flash-preview-tts"
+        self.default_model = "gemini-tts-placeholder"
         
     async def synthesize(self, text: str, voice: str, **kwargs) -> bytes:
         """Synthesize speech using Gemini TTS API."""
-        model = kwargs.get("model", self.default_model)
-        
-        # Gemini TTS API endpoint
-        url = f"{self.base_url}/models/{model}:generateContent"
-        
-        headers = {
-            "Content-Type": "application/json",
-            "x-goog-api-key": self.api_key
-        }
-        
-        # Gemini TTS API request format
-        data = {
-            "contents": [{
-                "parts": [{
-                    "text": text
-                }]
-            }],
-            "generationConfig": {
-                "responseMimeType": "audio/wav"
-            }
-        }
-        
-        # Add voice settings if specified
-        if voice and voice != "default":
-            data["systemInstruction"] = {
-                "parts": [{
-                    "text": f"Use voice style: {voice}"
-                }]
-            }
-        
-        import aiohttp
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=data, headers=headers) as response:
-                if response.status == 200:
-                    response_data = await response.json()
-                    # Extract audio data from Gemini response
-                    # Note: This may need adjustment based on actual Gemini TTS API response format
-                    if "candidates" in response_data and response_data["candidates"]:
-                        audio_content = response_data["candidates"][0]["content"]["parts"][0].get("audioData")
-                        if audio_content:
-                            import base64
-                            return base64.b64decode(audio_content)
-                    raise Exception("No audio data in Gemini response")
-                else:
-                    error_text = await response.text()
-                    raise Exception(f"Gemini API error: {response.status} - {error_text}")
+        # Since Gemini doesn't have TTS yet, we'll raise a helpful error
+        raise NotImplementedError(
+            "Gemini TTS is not yet available. Gemini API currently only supports text generation. "
+            "Use OpenAI or ElevenLabs for TTS functionality. "
+            "This provider is a placeholder for future Gemini TTS integration."
+        )
     
     async def get_available_voices(self) -> List[Dict[str, str]]:
         """Get Gemini available voices with metadata."""
-        # Gemini TTS uses text-based voice descriptions rather than specific voice IDs
+        # Placeholder voices for future implementation
         voices = [
             {
-                "id": "default",
-                "name": "Default Voice",
-                "description": "Gemini default speech synthesis voice",
-                "provider": "gemini"
-            },
-            {
-                "id": "natural",
-                "name": "Natural Voice",
-                "description": "Natural conversational voice style",
-                "provider": "gemini"
-            },
-            {
-                "id": "professional",
-                "name": "Professional Voice", 
-                "description": "Professional presentation voice style",
-                "provider": "gemini"
-            },
-            {
-                "id": "expressive",
-                "name": "Expressive Voice",
-                "description": "Expressive storytelling voice style", 
+                "id": "placeholder",
+                "name": "Placeholder Voice",
+                "description": "Placeholder for future Gemini TTS implementation",
                 "provider": "gemini"
             }
         ]
@@ -438,21 +376,20 @@ def initialize_tts_service(openai_key: str = None, elevenlabs_key: str = None,
     
     if gemini_key:
         try:
+            # Note: Gemini TTS is not yet available, this is a placeholder
             gemini_provider = GeminiTTSProvider(gemini_key, gemini_url)
             tts_service.add_provider("gemini", gemini_provider)
-            logging.info("Gemini TTS provider initialized")
+            logging.info("Gemini TTS provider initialized (placeholder - not functional yet)")
         except Exception as e:
             logging.warning(f"Failed to initialize Gemini provider: {str(e)}")
     
-    # Set default provider preference (ElevenLabs if available, otherwise OpenAI, then Gemini)
+    # Set default provider preference (ElevenLabs if available, otherwise OpenAI)
     if "elevenlabs" in tts_service.providers:
         tts_service.set_default_provider("elevenlabs")
     elif "openai" in tts_service.providers:
         tts_service.set_default_provider("openai")
-    elif "gemini" in tts_service.providers:
-        tts_service.set_default_provider("gemini")
     else:
-        logging.warning("No TTS providers available")
+        logging.warning("No functional TTS providers available")
 
 
 async def list_all_voices() -> Dict[str, List[Dict[str, str]]]:

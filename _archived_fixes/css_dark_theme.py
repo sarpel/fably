@@ -1,0 +1,98 @@
+
+# Dark theme CSS to fix white component backgrounds
+DARK_THEME_CSS = """
+/* Fably Dark Theme CSS Fixes - Component Background Colors */
+
+/* Target specific component IDs with white backgrounds */
+#component-11,
+#component-16, 
+#component-54,
+#component-63,
+#component-82,
+#component-87 {
+    background-color: #1f2937 !important;
+    border: 1px solid #374151 !important;
+    border-radius: 8px !important;
+}
+
+/* Fix all fably-card elements with white backgrounds */
+.fably-card {
+    background-color: #1f2937 !important;
+    border: 1px solid #374151 !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+}
+
+/* Fix card-like containers in all tabs */
+.block.svelte-1svsvh2,
+.form.svelte-633qhp,
+.column.fably-card {
+    background-color: #1f2937 !important;
+    border: 1px solid #374151 !important;
+}
+
+/* Fix dropdown and input containers */
+.wrap.svelte-1hfxrpf,
+.secondary-wrap.svelte-1hfxrpf {
+    background-color: #1f2937 !important;
+}
+
+/* Fix white backgrounds in settings tabs */
+.gradio-tabitem {
+    background-color: #111827 !important;
+}
+
+/* Fix input fields and dropdowns */
+input[class*="svelte"],
+select[class*="svelte"],
+textarea[class*="svelte"] {
+    background-color: #374151 !important;
+    border: 1px solid #4b5563 !important;
+    color: #f9fafb !important;
+}
+
+/* Fix button backgrounds */
+button[class*="svelte"].secondary {
+    background-color: #374151 !important;
+    border: 1px solid #4b5563 !important;
+    color: #f9fafb !important;
+}
+
+/* Fix markdown containers */
+.prose.svelte-lag733 {
+    background-color: #1f2937 !important;
+    color: #f9fafb !important;
+}
+
+/* Fix any remaining white backgrounds in containers */
+[style*="background: #ffffff"],
+[style*="background: white"],
+[style*="background-color: #ffffff"],
+[style*="background-color: white"] {
+    background-color: #1f2937 !important;
+}
+
+/* Fix content containers */
+.svelte-vuh1yp,
+.container.svelte-g2oxp3 {
+    background-color: #1f2937 !important;
+}
+
+/* Ensure text is readable on dark backgrounds */
+.fably-card *,
+#component-11 *,
+#component-16 *,
+#component-54 *,
+#component-63 *,
+#component-82 *,
+#component-87 * {
+    color: #f9fafb !important;
+}
+
+/* Fix any stats or info cards */
+div[style*="background: #f8f9fa"] {
+    background: #1f2937 !important;
+    border: 1px solid #374151 !important;
+}
+"""
+
