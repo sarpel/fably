@@ -14,16 +14,38 @@ import requests
 # Add the parent directory to the system path to allow for module imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+CONFIG_FILE = "config.yaml"
 
-# --- Main Context Class ---
 class FablyWebContext:
     """
     Manages the application's configuration and current state, like language.
     """
     def __init__(self):
-        # Load default configuration on initialization
-        self.config = self.load_default_config()
+        self.config = self.load_config()
         self.current_language = "tr"  # Default language
+
+    def load_config(self) -> Dict[str, Any]:
+        """
+        Loads configuration from config.yaml or sets fallback values.
+        """
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                    return yaml.safe_load(f) or self.load_default_config()
+            except Exception:
+                return self.load_default_config()
+        else:
+            return self.load_default_config()
+
+    def save_config(self):
+        """
+        Saves the current configuration to config.yaml.
+        """
+        try:
+            with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+                yaml.safe_dump(self.config, f)
+        except Exception as e:
+            print(f"Config kaydedilemedi: {e}")
 
     def load_default_config(self) -> Dict[str, Any]:
         """
@@ -32,15 +54,19 @@ class FablyWebContext:
         return {
             "openai_api_key": os.getenv("OPENAI_API_KEY", ""),
             "openai_url": "https://api.openai.com/v1",
-            "llm_model": "gpt-4o-mini",
-            "tts_provider": "openai",
-            "tts_voice": "nova",
+            "llm_model": "gemini-2.5-flash-lite",
+            "tts_provider": "elevenlabs",
+            "tts_voice": "rachel",
             "elevenlabs_api_key": os.getenv("ELEVENLABS_API_KEY", ""),
             "elevenlabs_url": "https://api.elevenlabs.io/v1",
+            "elevenlabs_model": "eleven_multilingual_v2",
             "gemini_api_key": os.getenv("GEMINI_API_KEY", ""),
             "gemini_url": "https://generativelanguage.googleapis.com/v1beta",
-            "llm_temperature": 0.9,
-            "max_tokens": 2000,
+            "llm_temperature": 1.0,
+            "max_tokens": 4000,
+            "wakeword_engine": "ppn",
+            "wakeword_model": "models/hey_elsa.ppn",
+            "gpio_button": True,
             "noise_reduction": True,
             "noise_sensitivity": 2.0,
         }
@@ -406,11 +432,11 @@ def create_fably_interface():
                             interactive=True
                         )
                         with gr.Row():
-                            temperature_slider = gr.Slider(minimum=0.1, maximum=2.0, value=0.9, step=0.1, label="🌡️ Yaratıcılık Seviyesi")
-                            max_tokens_slider = gr.Slider(minimum=500, maximum=4000, value=2000, step=100, label="📏 Maksimum Uzunluk")
+                            temperature_slider = gr.Slider(minimum=0.1, maximum=2.0, value=ctx.config.get("llm_temperature", 1.0), step=0.1, label="🌡️ Yaratıcılık Seviyesi")
+                            max_tokens_slider = gr.Slider(minimum=500, maximum=4000, value=ctx.config.get("max_tokens", 4000), step=100, label="📏 Maksimum Uzunluk")
                     with gr.Column(elem_classes="fably-card"):
                         gr.Markdown("#### 🎵 Ses Ayarları")
-                        new_story_voice = gr.Dropdown(choices=[], label="TTS Sesi", interactive=True)
+                        new_story_voice = gr.Dropdown(choices=[], label="TTS Sesi", interactive=True, value=ctx.config.get("tts_voice", "rachel"))
                         refresh_new_voices_btn = gr.Button("🔄 Sesleri Yenile")
 
                 with gr.Row():
@@ -438,17 +464,17 @@ def create_fably_interface():
                                 default_tts_provider = gr.Dropdown(choices=["openai", "elevenlabs"], value="openai", label="Varsayılan TTS Sağlayıcısı", interactive=True)
                             with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### 📊 Varsayılan Parametreler")
-                                default_temperature = gr.Slider(minimum=0.1, maximum=2.0, value=0.9, step=0.1, label="Varsayılan Sıcaklık", interactive=True)
-                                default_max_tokens = gr.Slider(minimum=500, maximum=4000, value=2000, step=100, label="Varsayılan Token Limiti", interactive=True)
+                                default_temperature = gr.Slider(minimum=0.1, maximum=2.0, value=ctx.config.get("llm_temperature", 1.0), step=0.1, label="Varsayılan Sıcaklık", interactive=True)
+                                default_max_tokens = gr.Slider(minimum=500, maximum=4000, value=ctx.config.get("max_tokens", 4000), step=100, label="Varsayılan Token Limiti", interactive=True)
                         with gr.Row():
                             with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### 🎙️ Ses Kalitesi Ayarları")
-                                noise_reduction_enabled = gr.Checkbox(label="Gürültü Azaltma", value=True, interactive=True)
-                                noise_sensitivity = gr.Slider(minimum=0.1, maximum=10.0, value=2.0, step=0.1, label="Gürültü Hassasiyeti", interactive=True)
+                                noise_reduction_enabled = gr.Checkbox(label="Gürültü Azaltma", value=ctx.config.get("noise_reduction", True), interactive=True)
+                                noise_sensitivity = gr.Slider(minimum=0.1, maximum=10.0, value=ctx.config.get("noise_sensitivity", 2.0), step=0.1, label="Gürültü Hassasiyeti", interactive=True)
                             with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### 🎛️ Donanım Kontrolleri")
-                                wakeword_engine = gr.Dropdown(choices=["disabled", "ppn", "onnx", "tflite"], value="disabled", label="Uyandırma Kelimesi Motoru", interactive=True)
-                                gpio_button_enabled = gr.Checkbox(label="GPIO Düğmesi Aktif", value=False, interactive=True)
+                                wakeword_engine = gr.Dropdown(choices=["disabled", "ppn", "onnx", "tflite"], value=ctx.config.get("wakeword_engine", "ppn"), label="Uyandırma Kelimesi Motoru", interactive=True)
+                                gpio_button_enabled = gr.Checkbox(label="GPIO Düğmesi Aktif", value=ctx.config.get("gpio_button", True), interactive=True)
 
                     with gr.Tab("🤖 OpenAI"):
                         with gr.Row():
@@ -470,9 +496,12 @@ def create_fably_interface():
                                 elevenlabs_base_url = gr.Textbox(label="ElevenLabs Temel URL", value=ctx.config["elevenlabs_url"], interactive=True)
                             with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### ElevenLabs Ayarlari")
-                                elevenlabs_model = gr.Dropdown(choices=["eleven_v3", "eleven_multilingual_v2", "eleven_flash_v2_5"], value="eleven_multilingual_v2", label="ElevenLabs Modeli", interactive=True)
+                                elevenlabs_model = gr.Dropdown(choices=[], label="ElevenLabs Modeli", interactive=True, value=ctx.config.get("elevenlabs_model", "eleven_multilingual_v2"))
+                                elevenlabs_model_status = gr.Textbox(label="Model Yükleme Durumu", interactive=False)
                                 elevenlabs_voice_select = gr.Dropdown(choices=[], label="Varsayilan ElevenLabs Sesi", interactive=True)
+                                elevenlabs_voice_status = gr.Textbox(label="Ses Yükleme Durumu", interactive=False)
                                 load_elevenlabs_voices_btn = gr.Button("ElevenLabs Seslerimi Yukle")
+                                load_elevenlabs_models_btn = gr.Button("ElevenLabs Modellerimi Yükle")
                     
                     with gr.Tab("Google Gemini"):
                         with gr.Row():
@@ -600,19 +629,42 @@ def create_fably_interface():
                 return None
 
         def handle_story_save(query, story, voice):
-            return save_story_to_disk(query, story, voice)
+            try:
+                path = save_story_to_disk(query, story, voice)
+                return f"✅ Hikaye kaydedildi: {path}"
+            except Exception as e:
+                return f"❌ Hikaye kaydedilemedi: {str(e)}"
 
         def handle_paragraph_save(story_path, *paragraph_texts):
-            return batch_save_paragraphs(story_path, list(paragraph_texts))
+            try:
+                count = batch_save_paragraphs(story_path, list(paragraph_texts))
+                return f"✅ {count} paragraf kaydedildi."
+            except Exception as e:
+                return f"❌ Paragraflar kaydedilemedi: {str(e)}"
 
         def handle_audio_regeneration(story_path, voice, *paragraph_texts):
-            return asyncio.run(batch_regenerate_audio(story_path, voice, list(paragraph_texts)))
+            try:
+                result = asyncio.run(batch_regenerate_audio(story_path, voice, list(paragraph_texts)))
+                return f"✅ Sesler yeniden oluşturuldu: {result}"
+            except Exception as e:
+                return f"❌ Sesler oluşturulamadı: {str(e)}"
 
         def handle_settings_save(*args):
-            # Placeholder for saving settings logic
             try:
-                # In a real app, you would update ctx.config and save to a file
-                return "✅ Ayarlar başarıyla kaydedildi!"
+                # args sırası settings_inputs ile aynı olmalı
+                keys = [
+                    "openai_api_key", "openai_url", "llm_model", "tts_model",
+                    "elevenlabs_api_key", "elevenlabs_url", "elevenlabs_model",
+                    "gemini_api_key", "gemini_url", "gemini_model",
+                    "llm_provider", "tts_provider",
+                    "llm_temperature", "max_tokens",
+                    "noise_reduction", "noise_sensitivity",
+                    "wakeword_engine", "gpio_button"
+                ]
+                for k, v in zip(keys, args):
+                    ctx.config[k] = v
+                ctx.save_config()
+                return "✅ Ayarlar başarıyla kaydedildi ve config.yaml dosyasına yazıldı!"
             except Exception as e:
                 return f"❌ Ayarlar kaydedilirken hata: {str(e)}"
 
@@ -633,13 +685,35 @@ def create_fably_interface():
 
         def handle_load_elevenlabs_voices(api_key, base_url):
             if not api_key or not base_url:
-                return gr.update(choices=[], value=None, label="Varsayılan ElevenLabs Sesi", visible=True)
+                return gr.update(choices=[], value=None, label="Varsayılan ElevenLabs Sesi", visible=True), "❌ API anahtarı veya URL eksik."
             voices = fetch_elevenlabs_voices(api_key, base_url)
             valid_voices = [(name, vid) for name, vid in voices if vid]
             if not valid_voices:
-                return gr.update(choices=[], value=None, visible=True)
-            # Doğru format: [(label, value), ...]
-            return gr.update(choices=valid_voices, value=valid_voices[0][1], visible=True)
+                return gr.update(choices=[], value=None, visible=True), "❌ Ses bulunamadı."
+            return gr.update(choices=valid_voices, value=valid_voices[0][1], visible=True), f"✅ {len(valid_voices)} ElevenLabs sesi yüklendi."
+
+        def fetch_elevenlabs_models(api_key, base_url):
+            """ElevenLabs API'den mevcut TTS modellerini dinamik olarak çek."""
+            url = f"{base_url.rstrip('/')}/models"
+            headers = {"xi-api-key": api_key}
+            try:
+                resp = requests.get(url, headers=headers, timeout=10)
+                resp.raise_for_status()
+                data = resp.json()
+                # API'nin model döndürme formatına göre uyarlanmalı
+                models = data.get("models", [])
+                return [(m.get("name", m.get("model_id", "Unknown")), m.get("model_id", "")) for m in models]
+            except Exception as e:
+                return [(f"API Hatası: {str(e)}", "")]
+
+        def handle_load_elevenlabs_models(api_key, base_url):
+            if not api_key or not base_url:
+                return gr.update(choices=[], value=None, label="Varsayılan ElevenLabs Modeli", visible=True), "❌ API anahtarı veya URL eksik."
+            models = fetch_elevenlabs_models(api_key, base_url)
+            valid_models = [(name, mid) for name, mid in models if mid]
+            if not valid_models:
+                return gr.update(choices=[], value=None, visible=True), "❌ Model bulunamadı."
+            return gr.update(choices=valid_models, value=valid_models[0][1], visible=True), f"✅ {len(valid_models)} ElevenLabs modeli yüklendi."
 
         def initialize_voice_dropdowns():
             voice_options = asyncio.run(get_available_voices())
@@ -724,7 +798,14 @@ def create_fably_interface():
         load_elevenlabs_voices_btn.click(
             fn=handle_load_elevenlabs_voices,
             inputs=[elevenlabs_api_key, elevenlabs_base_url],
-            outputs=[elevenlabs_voice_select]
+            outputs=[elevenlabs_voice_select, elevenlabs_voice_status]
+        )
+
+        # ElevenLabs models button handler
+        load_elevenlabs_models_btn.click(
+            fn=handle_load_elevenlabs_models,
+            inputs=[elevenlabs_api_key, elevenlabs_base_url],
+            outputs=[elevenlabs_model, elevenlabs_model_status]
         )
 
         # Initial loading actions
