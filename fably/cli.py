@@ -19,7 +19,6 @@ from fably.voice_manager import voice_manager
 
 from fably.cli_utils import pass_context
 
-OPENAI_URL = "https://api.openai.com/v1"
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
 DEEPSEEK_URL = "https://api.deepseek.com/v1"
 OLLAMA_URL = "http://127.0.0.1:11434/v1"
@@ -31,18 +30,14 @@ STORIES_PATH = "./stories"
 MODELS_PATH = "./models"
 SOUND_MODEL = "vosk-model-small-tr-0.3"  # Türkçe model (güncellenmiş)
 SAMPLE_RATE = 24000
-STT_URL = OPENAI_URL
-STT_MODEL = "whisper-1"
-LLM_URL = OPENAI_URL
-# LLM_URL = OLLAMA_URL
+LLM_URL = GEMINI_URL
 LLM_MODEL = "o4-mini"
 # LLM_MODEL = "gpt-3.5-turbo"
 TEMPERATURE = 1.0
 MAX_TOKENS = 2000
-TTS_URL = OPENAI_URL
+TTS_URL = GEMINI_URL
 TTS_MODEL = "tts-1"
 TTS_VOICE = "nova"
-TTS_PROVIDER = "openai"
 TTS_FORMAT = "mp3"
 LANGUAGE = "tr"  # Sadece Türkçe
 BUTTON_GPIO_PIN = 17
@@ -104,16 +99,6 @@ load_dotenv()
     help=f'The model to use to discriminate speech in voice queries. Defaults to "{SOUND_MODEL}".',
 )
 @click.option(
-    "--stt-url",
-    default=LLM_URL,
-    help=f'The URL of the cloud endpoint for the STT model. Defaults to "{STT_URL}".',
-)
-@click.option(
-    "--stt-model",
-    default=STT_MODEL,
-    help=f'The STT model to use when generating stories. Defaults to "{STT_MODEL}".',
-)
-@click.option(
     "--llm-url",
     default=LLM_URL,
     help=f'The URL of the cloud endpoint for the LLM model. Defaults to "{LLM_URL}".',
@@ -125,9 +110,9 @@ load_dotenv()
 )
 @click.option(
     "--llm-provider",
-    type=click.Choice(["openai", "gemini", "deepseek", "ollama"], case_sensitive=False),
-    default="openai",
-    help='The LLM provider to use. Defaults to "openai".',
+    type=click.Choice(["gemini", "deepseek", "ollama"], case_sensitive=False),
+    default="gemini",
+    help='The LLM provider to use. Defaults to "gemini".',
 )
 @click.option(
     "--gemini-api-key",
@@ -136,12 +121,6 @@ load_dotenv()
 @click.option(
     "--deepseek-api-key", 
     help="Deepseek API key. Can also be set via DEEPSEEK_API_KEY environment variable.",
-)
-@click.option(
-    "--stt-provider",
-    type=click.Choice(["openai_whisper", "google_cloud_speech", "local_whisper"], case_sensitive=False),
-    default="openai_whisper",
-    help='The STT provider to use. Defaults to "openai_whisper".',
 )
 @click.option(
     "--google-cloud-api-key",
@@ -191,9 +170,9 @@ load_dotenv()
 )
 @click.option(
     "--tts-provider",
-    type=click.Choice(["openai", "elevenlabs"], case_sensitive=False),
-    default=TTS_PROVIDER,
-    help=f'The TTS provider to use. Defaults to "{TTS_PROVIDER}".',
+    type=click.Choice(["elevenlabs"], case_sensitive=False),
+    default="elevenlabs",
+    help=f'The TTS provider to use. Defaults to "elevenlabs".',
 )
 @click.option(
     "--elevenlabs-url",
@@ -323,14 +302,11 @@ def cli(
     stories_path,
     models_path,
     sound_model,
-    stt_url,
-    stt_model,
     llm_url,
     llm_model,
     llm_provider,
     gemini_api_key,
     deepseek_api_key,
-    stt_provider,
     google_cloud_api_key,
     google_project_id,
     local_whisper_model,
@@ -372,14 +348,11 @@ def cli(
         logging.basicConfig(level=logging.INFO)
 
     ctx.sound_model = sound_model
-    ctx.stt_url = stt_url
-    ctx.stt_model = stt_model
     ctx.llm_url = llm_url
     ctx.llm_model = llm_model
     ctx.llm_provider = llm_provider
     ctx.gemini_api_key = gemini_api_key or os.getenv("GEMINI_API_KEY")
     ctx.deepseek_api_key = deepseek_api_key or os.getenv("DEEPSEEK_API_KEY")
-    ctx.stt_provider = stt_provider
     ctx.google_cloud_api_key = google_cloud_api_key or os.getenv("GOOGLE_CLOUD_API_KEY")
     ctx.google_project_id = google_project_id or os.getenv("GOOGLE_PROJECT_ID")
     ctx.local_whisper_model = local_whisper_model
@@ -425,21 +398,10 @@ def cli(
     ctx.running = True
     ctx.talking = False
 
-    ctx.api_key = os.getenv("OPENAI_API_KEY")
-    if ctx.api_key is None:
-        raise ValueError(
-            "OPENAI_API_KEY environment variable not set or .env file not found."
-        )
-    
-    # Get ElevenLabs API key if using ElevenLabs provider
-    ctx.elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
-    
     # Initialize TTS service with available providers
     try:
         # Prepare arguments for initialize_tts_service, only pass if not None
         tts_args = {}
-        if ctx.elevenlabs_api_key:
-            tts_args['elevenlabs_key'] = ctx.elevenlabs_api_key
         if ctx.elevenlabs_url:
             tts_args['elevenlabs_url'] = ctx.elevenlabs_url
         if ctx.gemini_api_key:

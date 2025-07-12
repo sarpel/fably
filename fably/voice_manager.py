@@ -19,9 +19,9 @@ class VoiceManager:
     """Manages voice selection, cycling, and categorization."""
     
     def __init__(self, config_path: Path = None):
-        self.config_path = config_path or utils.resolve("voice_config.json")
+        self.config_path = config_path if config_path is not None else utils.resolve("voice_config.json")
         self.current_voice = "nova"
-        self.current_provider = "openai"
+        self.current_provider = "elevenlabs"
         self.voice_history = []
         self.favorites = []
         self.voice_categories = {
@@ -40,7 +40,7 @@ class VoiceManager:
                 with open(self.config_path, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     self.current_voice = config.get("current_voice", "nova")
-                    self.current_provider = config.get("current_provider", "openai")
+                    self.current_provider = config.get("current_provider", "elevenlabs")
                     self.voice_history = config.get("voice_history", [])
                     self.favorites = config.get("favorites", [])
                     self.voice_categories = config.get("voice_categories", self.voice_categories)
@@ -159,20 +159,20 @@ class VoiceManager:
         if use_case == "storytelling":
             # Look for clear, expressive voices suitable for children
             preferred_voices = [
-                "openai:nova",     # Clear female voice
-                "openai:alloy",    # Neutral voice
-                "openai:fable",    # Expressive female voice
+                "nova",     # Clear female voice
+                "alloy",    # Neutral voice
+                "fable",    # Expressive female voice
             ]
         elif use_case == "educational":
             preferred_voices = [
-                "openai:echo",     # Clear male voice
-                "openai:nova",     # Clear female voice
+                "echo",     # Clear male voice
+                "nova",     # Clear female voice
             ]
         else:
             # Default recommendations
             preferred_voices = [
-                "openai:nova",
-                "openai:alloy",
+                "nova",
+                "alloy",
             ]
         
         # Add preferred voices that are available
