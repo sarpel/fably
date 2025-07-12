@@ -481,9 +481,9 @@ def cli(
         web_interface_path = os.path.join(os.path.dirname(__file__), "..", "web_interface", "launch.py")
         
         if os.path.exists(web_interface_path):
-            print("🚀 Fably Profesyonel Web Arayüzü başlatılıyor...")
-            print("📍 Adres: http://localhost:7860")
-            print("🌍 Varsayılan dil: Türkçe")
+            print("Fably Profesyonel Web Arayuzu baslatiliyor...")
+            print("Adres: http://localhost:7860")
+            print("Varsayilan dil: Turkce")
             subprocess.run([sys.executable, web_interface_path])
         else:
             # Fallback to old enhanced app if exists
@@ -491,13 +491,13 @@ def cli(
             basic_app_path = os.path.join(os.path.dirname(__file__), "..", "tools", "gradio_app", "app.py")
             
             if os.path.exists(enhanced_app_path):
-                print("🌐 Eski Enhanced Fably Web Uygulaması başlatılıyor...")
+                print("Eski Enhanced Fably Web Uygulamasi baslatiliyor...")
                 subprocess.run([sys.executable, enhanced_app_path])
             elif os.path.exists(basic_app_path):
-                print("🌐 Temel Fably Web Uygulaması başlatılıyor...")
+                print("Temel Fably Web Uygulamasi baslatiliyor...")
                 subprocess.run([sys.executable, basic_app_path])
             else:
-                print("❌ Web arayüzü bulunamadı. Lütfen web_interface/ dizinini kontrol edin.")
+                print("Web arayuzu bulunamadi. Lutfen web_interface/ dizinini kontrol edin.")
         return
 
     # Alsa is only supported on Linux.
