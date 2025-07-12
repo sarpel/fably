@@ -182,3 +182,23 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Fably özel gereksiz dosyalar
+fably/stories/
+fably/examples/
+fably/sounds/*.wav
+fably/sounds/*.mp3
+fably/sounds/*.ogg
+fably/continuation_prompt.txt
+fably/prompt.txt
+web_interface/__pycache__/
+web_interface/*.pyc
+servers/*/__pycache__/
+servers/*/*.pyc
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.DS_Store
+fably_diagnostics.py
