@@ -306,7 +306,7 @@ def create_fably_interface():
         margin-bottom: 2rem;
     }
     .gradio-container {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: linear-gradient(135deg, #2a2e6e 0%, #4b206b 100%);
         min-height: 100vh;
     }
     """
