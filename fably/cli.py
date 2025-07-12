@@ -19,6 +19,9 @@ from fably.voice_manager import voice_manager
 
 from fably.cli_utils import pass_context
 
+import threading
+import time
+
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
 DEEPSEEK_URL = "https://api.deepseek.com/v1"
 OLLAMA_URL = "http://127.0.0.1:11434/v1"
@@ -620,8 +623,43 @@ def add_voice_cycling_to_button_handler(ctx):
     ctx.button.when_released = enhanced_released
 
 
+def start_web_app():
+    import subprocess, sys, os
+    web_interface_path = os.path.join(os.path.dirname(__file__), "..", "web_interface", "launch.py")
+    if os.path.exists(web_interface_path):
+        subprocess.Popen([sys.executable, web_interface_path])
+
+
+def gpio_story_listener(ctx):
+    try:
+        from gpiozero import Button
+    except ImportError:
+        logging.error("gpiozero not installed. GPIO button support unavailable.")
+        return
+    button = Button(ctx.button_gpio_pin)
+    logging.info(f"Listening for GPIO button on pin {ctx.button_gpio_pin}")
+    while True:
+        button.wait_for_active()
+        logging.info("GPIO button pressed. Playing next unread story...")
+        story_path = utils.find_next_unread_story(ctx.stories_path)
+        if story_path:
+            logging.info(f"Playing story: {story_path}")
+            try:
+                fably.main(ctx, query=None)
+                utils.mark_story_as_read(story_path)
+            except Exception as e:
+                logging.error(f"Failed to play story: {e}")
+        else:
+            logging.info("No unread stories found.")
+        time.sleep(0.5)
+
+
 if __name__ == "__main__":
     try:
-        cli()
+        threading.Thread(target=start_web_app, daemon=True).start()
+        import click
+        ctx = click.Context(cli)
+        cli.invoke(ctx)
+        gpio_story_listener(ctx)
     except KeyboardInterrupt:
         sys.exit("\nInterrupted by user")
