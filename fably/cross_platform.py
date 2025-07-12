@@ -138,6 +138,12 @@ def convert_line_endings(file_path, target_ending='lf'):
         
         return True
         
+    except FileNotFoundError:
+        logging.error(f"Line ending conversion failed for {file_path}: File not found.")
+        return False
+    except PermissionError:
+        logging.error(f"Line ending conversion failed for {file_path}: Permission denied.")
+        return False
     except Exception as e:
         logging.error(f"Line ending conversion failed for {file_path}: {e}")
         return False

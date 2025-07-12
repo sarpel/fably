@@ -288,6 +288,80 @@ EOF
     success "USB Audio configured successfully"
 }
 
+# Audio configuration for all supported hardware
+configure_asoundrc() {
+    case $AUDIO_CARD in
+        "iqaudio")
+            cat > "$HOME/.asoundrc" << 'EOF'
+# IQaudio Codec Zero configuration (User tested)
+pcm.!default {
+    type plug
+    slave.pcm "hw:0,0"
+}
+ctl.!default {
+    type hw
+    card 0
+}
+EOF
+            log "Created .asoundrc for IQaudio Codec Zero."
+            ;;
+        "respeaker")
+            cat > "$HOME/.asoundrc" << 'EOF'
+# reSpeaker HAT configuration
+pcm.!default {
+    type asym
+    playback.pcm "plughw:seeed2micvoicec,0"
+    capture.pcm "plughw:seeed2micvoicec,0"
+}
+ctl.!default {
+    type hw
+    card "seeed2micvoicec"
+}
+EOF
+            log "Created .asoundrc for reSpeaker HAT."
+            ;;
+        "usb")
+            cat > "$HOME/.asoundrc" << 'EOF'
+# USB Audio configuration
+pcm.!default {
+    type asym
+    playback.pcm {
+        type hw
+        card 1
+        device 0
+    }
+    capture.pcm {
+        type hw
+        card 1
+        device 0
+    }
+}
+ctl.!default {
+    type hw
+    card 1
+}
+EOF
+            log "Created .asoundrc for USB Audio."
+            ;;
+        *)
+            cat > "$HOME/.asoundrc" << 'EOF'
+# Basic ALSA configuration
+pcm.!default {
+    type hw
+    card 0
+    device 0
+}
+ctl.!default {
+    type hw
+    card 0
+}
+EOF
+            log "Created default .asoundrc."
+            ;;
+    esac
+    chmod 644 "$HOME/.asoundrc"
+}
+
 # ================================================================================
 # PACKAGE INSTALLATION
 # ================================================================================
@@ -738,7 +812,7 @@ install_complete() {
     setup_python_environment
     install_fably_dependencies
     detect_audio_hardware
-    
+    configure_asoundrc
     # Configure audio based on detected hardware
     case $AUDIO_CARD in
         "iqaudio")
@@ -781,7 +855,7 @@ quick_audio_fix() {
     
     detect_system
     detect_audio_hardware
-    
+    configure_asoundrc
     case $AUDIO_CARD in
         "iqaudio")
             configure_iqaudio_codec_zero
@@ -797,19 +871,6 @@ quick_audio_fix() {
             ;;
         *)
             log "Creating basic audio configuration..."
-            cat > "$HOME/.asoundrc" << 'EOF'
-# Basic ALSA configuration
-pcm.!default {
-    type hw
-    card 0
-    device 0
-}
-ctl.!default {
-    type hw
-    card 0
-}
-EOF
-            success "Basic audio configuration created"
             ;;
     esac
     

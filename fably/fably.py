@@ -87,7 +87,7 @@ async def writer(ctx, story_queue, query=None):
         story_path = continue_story_path
         story_context = utils.extract_story_context(story_path, max_paragraphs=10)
         starting_paragraph_index = utils.get_next_paragraph_index(story_path)
-        logging.info(f"Continuing story '{story_context['original_query']}' from paragraph {starting_paragraph_index}")
+        logging.info(f"Continuing story '{story_context['original_query']}' from paragraph %i", starting_paragraph_index)
         for index in range(story_context['paragraph_count']):
             await story_queue.put((story_path, index, None))
     else:

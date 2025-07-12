@@ -71,42 +71,42 @@ load_dotenv()
 @click.option(
     "--prompt-file",
     default=PROMPT_FILE,
-    help=f'The file to use as the prompt when generating stories. Defaults to "{PROMPT_FILE}".',
+    help=f'The file to use as the prompt when generating stories. Defaults to "%s".' % PROMPT_FILE,
 )
 @click.option(
     "--sample-rate",
     default=SAMPLE_RATE,
-    help=f"The sample rate to use when generating stories. Defaults to {SAMPLE_RATE}.",
+    help=f"The sample rate to use when generating stories. Defaults to %s." % SAMPLE_RATE,
 )
 @click.option(
     "--queries-path",
     default=QUERIES_PATH,
-    help=f'The directory to store the recorded voice queries in. Defaults to "{QUERIES_PATH}".',
+    help=f'The directory to store the recorded voice queries in. Defaults to "%s".' % QUERIES_PATH,
 )
 @click.option(
     "--stories-path",
     default=STORIES_PATH,
-    help=f'The directory to store the generated stories in. Defaults to "{STORIES_PATH}".',
+    help=f'The directory to store the generated stories in. Defaults to "%s".' % STORIES_PATH,
 )
 @click.option(
     "--models-path",
     default=MODELS_PATH,
-    help=f'The directory to store the downloaded models running locally. Defaults to "{MODELS_PATH}".',
+    help=f'The directory to store the downloaded models running locally. Defaults to "%s".' % MODELS_PATH,
 )
 @click.option(
     "--sound-model",
     default=SOUND_MODEL,
-    help=f'The model to use to discriminate speech in voice queries. Defaults to "{SOUND_MODEL}".',
+    help=f'The model to use to discriminate speech in voice queries. Defaults to "%s".' % SOUND_MODEL,
 )
 @click.option(
     "--llm-url",
     default=LLM_URL,
-    help=f'The URL of the cloud endpoint for the LLM model. Defaults to "{LLM_URL}".',
+    help=f'The URL of the cloud endpoint for the LLM model. Defaults to "%s".' % LLM_URL,
 )
 @click.option(
     "--llm-model",
     default=LLM_MODEL,
-    help=f'The LLM model to use when generating stories. Defaults to "{LLM_MODEL}".',
+    help=f'The LLM model to use when generating stories. Defaults to "%s".' % LLM_MODEL,
 )
 @click.option(
     "--llm-provider",
@@ -140,33 +140,33 @@ load_dotenv()
     "--temperature",
     type=float,
     default=TEMPERATURE,
-    help="The temperature to use when generating stories. Defaults to {TEMPERATURE}.",
+    help="The temperature to use when generating stories. Defaults to %s." % TEMPERATURE,
 )
 @click.option(
     "--max-tokens",
     type=int,
     default=MAX_TOKENS,
-    help="The maximum number of tokens to use when generating stories. Defaults to {MAX_TOKENS}.",
+    help="The maximum number of tokens to use when generating stories. Defaults to %s." % MAX_TOKENS,
 )
 @click.option(
     "--tts-url",
     default=LLM_URL,
-    help=f'The URL of the cloud endpoint for the TTS model. Defaults to "{TTS_URL}".',
+    help=f'The URL of the cloud endpoint for the TTS model. Defaults to "%s".' % TTS_URL,
 )
 @click.option(
     "--tts-model",
     default=TTS_MODEL,
-    help=f'The TTS model to use when generating stories. Defaults to "{TTS_MODEL}".',
+    help=f'The TTS model to use when generating stories. Defaults to "%s".' % TTS_MODEL,
 )
 @click.option(
     "--tts-voice",
     default=TTS_VOICE,
-    help=f'The TTS voice to use when generating stories. Defaults to "{TTS_VOICE}".',
+    help=f'The TTS voice to use when generating stories. Defaults to "%s".' % TTS_VOICE,
 )
 @click.option(
     "--tts-format",
     default=TTS_FORMAT,
-    help=f'The TTS format to use when generating stories. Defaults to "{TTS_FORMAT}".',
+    help=f'The TTS format to use when generating stories. Defaults to "%s".' % TTS_FORMAT,
 )
 @click.option(
     "--tts-provider",
@@ -177,7 +177,7 @@ load_dotenv()
 @click.option(
     "--elevenlabs-url",
     default=ELEVENLABS_URL,
-    help=f'The URL of the ElevenLabs API endpoint. Defaults to "{ELEVENLABS_URL}".',
+    help=f'The URL of the ElevenLabs API endpoint. Defaults to "%s".' % ELEVENLABS_URL,
 )
 @click.option(
     "--list-voices",
@@ -198,12 +198,12 @@ load_dotenv()
 @click.option(
     "--query-guard",
     default=QUERY_GUARD,
-    help=f'Optional text prefix for queries (legacy feature). Defaults to "{QUERY_GUARD}" (empty = natural language).',
+    help=f'Optional text prefix for queries (legacy feature). Defaults to "%s" (empty = natural language).' % QUERY_GUARD,
 )
 @click.option(
     "--continuation-patterns",
     default=",".join(CONTINUATION_PATTERNS),
-    help=f'Comma-separated list of patterns that indicate story continuation requests. Defaults to "{",".join(CONTINUATION_PATTERNS)}".',
+    help=f'Comma-separated list of patterns that indicate story continuation requests. Defaults to "%s".' % ",".join(CONTINUATION_PATTERNS),
 )
 @click.option(
     "--story-request",
@@ -246,13 +246,13 @@ load_dotenv()
     "--noise-sensitivity",
     type=float,
     default=NOISE_SENSITIVITY,
-    help=f"Noise gate sensitivity multiplier. Higher values are more sensitive to quiet sounds. Defaults to {NOISE_SENSITIVITY}.",
+    help=f"Noise gate sensitivity multiplier. Higher values are more sensitive to quiet sounds. Defaults to %s." % NOISE_SENSITIVITY,
 )
 @click.option(
     "--calibration-duration",
     type=float,
     default=CALIBRATION_DURATION,
-    help=f"Duration in seconds to record ambient noise for calibration. Defaults to {CALIBRATION_DURATION}.",
+    help=f"Duration in seconds to record ambient noise for calibration. Defaults to %s." % CALIBRATION_DURATION,
 )
 @click.option(
     "--auto-calibrate",
@@ -282,13 +282,13 @@ load_dotenv()
     "--button-gpio-pin",
     type=int,
     default=BUTTON_GPIO_PIN,
-    help=f"The GPIO pin to use for the button. Defaults to {BUTTON_GPIO_PIN}.",
+    help=f"The GPIO pin to use for the button. Defaults to %s." % BUTTON_GPIO_PIN,
 )
 @click.option(
     "--hold-time",
     type=float,
     default=HOLD_TIME,
-    help="The time to hold the button to erase all recorded sounds. Defaults to {HOLD_TIME} seconds.",
+    help="The time to hold the button to erase all recorded sounds. Defaults to %s seconds." % HOLD_TIME,
 )
 @click.option("--loop", is_flag=True, default=False, help="Enables loop operation.")
 @click.option("--web-app", is_flag=True, default=False, help="Launch the professional web interface for story management.")

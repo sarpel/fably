@@ -45,8 +45,13 @@ class VoiceManager:
                     self.favorites = config.get("favorites", [])
                     self.voice_categories = config.get("voice_categories", self.voice_categories)
                 logging.debug(f"Loaded voice config from {self.config_path}")
+            except FileNotFoundError:
+                logging.warning(f"Voice config file not found at {self.config_path}. Creating new one.")
+                self._save_config() # Ensure a new config file is created
+            except json.JSONDecodeError:
+                logging.error(f"Failed to decode JSON from voice config file {self.config_path}")
             except Exception as e:
-                logging.warning(f"Failed to load voice config: {str(e)}")
+                logging.error(f"An unexpected error occurred while loading voice config: {str(e)}")
     
     def _save_config(self):
         """Save voice configuration to file."""
@@ -61,8 +66,10 @@ class VoiceManager:
             with open(self.config_path, 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=2)
             logging.debug(f"Saved voice config to {self.config_path}")
+        except FileNotFoundError:
+            logging.error(f"Voice config file not found at {self.config_path} when trying to save.")
         except Exception as e:
-            logging.error(f"Failed to save voice config: {str(e)}")
+            logging.error(f"An unexpected error occurred while saving voice config: {str(e)}")
     
     def set_voice(self, voice: str, provider: str = None):
         """Set the current voice and provider."""
@@ -286,6 +293,9 @@ class VoiceManager:
             logging.info(f"Generated voice preview: {preview_file}")
             return preview_file
             
+        except FileNotFoundError:
+            logging.error(f"Preview directory not found: {preview_dir}")
+            raise
         except Exception as e:
             logging.error(f"Failed to generate voice preview: {str(e)}")
             raise

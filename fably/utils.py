@@ -117,7 +117,7 @@ def get_speech_recognizer(models_path, model_name):
         
         if not success and model_name.startswith("vosk-model-small-tr"):
             # Fallback for Turkish models
-            logging.warning(f"Turkish model {model_name} not found, trying fallback versions...")
+            logging.warning(f"Turkish model %s not found, trying fallback versions...", model_name)
             fallback_models = [
                 "vosk-model-small-tr-0.3",
                 "vosk-model-small-tr-0.22", 
@@ -126,7 +126,7 @@ def get_speech_recognizer(models_path, model_name):
             
             for fallback_model in fallback_models:
                 if fallback_model != model_name:
-                    logging.info(f"Trying fallback Turkish model: {fallback_model}")
+                    logging.info(f"Trying fallback Turkish model: %s", fallback_model)
                     success = download_vosk_model(models_path, fallback_model)
                     if success:
                         model_name = fallback_model
@@ -136,7 +136,7 @@ def get_speech_recognizer(models_path, model_name):
             if not success:
                 raise RuntimeError(f"Failed to download any Turkish Vosk model. Please check your internet connection or manually download from https://alphacephei.com/vosk/models/")
         elif not success:
-            raise RuntimeError(f"Failed to download Vosk model {model_name}. Please check your internet connection.")
+            raise RuntimeError(f"Failed to download Vosk model %s. Please check your internet connection.", model_name)
 
     model = Model(str(model_dir))
     return KaldiRecognizer(
@@ -160,7 +160,7 @@ def download_vosk_model(models_path, model_name):
     model_url = f"https://alphacephei.com/vosk/models/{model_name}.zip"
 
     try:
-        logging.info(f"Downloading {model_name} from {model_url}...")
+        logging.info(f"Downloading %s from %s...", model_name, model_url)
 
         # Download the model with timeout and proper error handling
         with requests.get(model_url, stream=True, timeout=30) as r:
@@ -174,7 +174,7 @@ def download_vosk_model(models_path, model_name):
                     f.write(chunk)
 
         # Unzip the model
-        logging.info(f"Unzipping {model_name}...")
+        logging.info(f"Unzipping %s...", model_name)
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(model_dir.parent)
 
@@ -182,19 +182,19 @@ def download_vosk_model(models_path, model_name):
         if zip_path.exists():
             zip_path.unlink()
             
-        logging.info(f"Model {model_name} downloaded and unpacked successfully in {model_dir}")
+        logging.info(f"Model %s downloaded and unpacked successfully in %s", model_name, model_dir)
         return True
         
     except requests.exceptions.RequestException as e:
-        logging.error(f"Network error downloading {model_name}: {e}")
+        logging.error(f"Network error downloading %s: %s", model_name, e)
         return False
     except zipfile.BadZipFile as e:
-        logging.error(f"Invalid zip file for {model_name}: {e}")
+        logging.error(f"Invalid zip file for %s: %s", model_name, e)
         if zip_path.exists():
             zip_path.unlink()
         return False
     except Exception as e:
-        logging.error(f"Unexpected error downloading {model_name}: {e}")
+        logging.error(f"Unexpected error downloading %s: %s", model_name, e)
         if zip_path.exists():
             zip_path.unlink()
         return False
@@ -217,18 +217,18 @@ def play_sound(sound, audio_driver="alsa", fallback_silent=False):
     sound_file = Path(__file__).resolve().parent / SOUNDS_PATH / f"{sound}.wav"
     if not sound_file.exists():
         if fallback_silent:
-            logging.debug(f"Sound {sound} not found at {sound_file}, skipping...")
+            logging.debug(f"Sound %s not found at %s, skipping...", sound, sound_file)
             return
         else:
-            raise ValueError(f"Sound {sound} not found in path {sound_file}.")
+            raise ValueError(f"Sound %s not found in path %s.", sound, sound_file)
     
     try:
         play_audio_file(sound_file, audio_driver)
     except Exception as e:
         if fallback_silent:
-            logging.debug(f"Audio playback failed for {sound}: {e}")
+            logging.debug(f"Audio playback failed for %s: %s", sound, e)
         else:
-            logging.error(f"Audio playback failed for {sound}: {e}")
+            logging.error(f"Audio playback failed for %s: %s", sound, e)
             raise
 
 
@@ -283,14 +283,14 @@ def play_audio_file(audio_file, audio_driver="alsa"):
                 ]
                 
                 for cmd in device_attempts:
-                    logging.debug(f"Trying: {cmd}")
+                    logging.debug(f"Trying: %s", cmd)
                     result = os.system(f"{cmd} 2>/dev/null")
                     if result == 0:
-                        logging.debug(f"Success with: {cmd}")
+                        logging.debug(f"Success with: %s", cmd)
                         success = True
                         break
                     else:
-                        logging.debug(f"Failed with exit code {result}: {cmd}")
+                        logging.debug(f"Failed with exit code %i: %s", result, cmd)
                 
                 # If ALSA failed completely and sounddevice is available, try it
                 if not success and SOUNDDEVICE_AVAILABLE:
@@ -302,18 +302,18 @@ def play_audio_file(audio_file, audio_driver="alsa"):
                         success = True
                         logging.debug("sounddevice fallback succeeded")
                     except Exception as sd_error:
-                        logging.debug(f"sounddevice fallback also failed: {sd_error}")
+                        logging.debug(f"sounddevice fallback also failed: %s", sd_error)
             
             if not success:
                 raise RuntimeError("All audio playback methods failed")
                 
         else:
-            raise ValueError(f"Unsupported audio driver: {audio_driver}")
+            raise ValueError(f"Unsupported audio driver: %s", audio_driver)
         
         logging.debug("Successfully played %s with %s", audio_file, audio_driver)
         
     except Exception as e:
-        logging.error(f"Audio playback failed: {e}")
+        logging.error(f"Audio playback failed: %s", e)
         # Try fallback text output for critical sounds
         if audio_file.name in ["sorry.wav", "bye.wav", "hi.wav", "instructions.wav"]:
             fallback_text = {
@@ -492,13 +492,13 @@ def find_story_for_continuation(stories_path, query, continuation_patterns=None)
         # Look for stories matching the topic
         matching_stories = find_stories_by_topic(stories_path, topic, max_results=1)
         if matching_stories:
-            logging.info(f"Found story to continue based on topic '{topic}': {matching_stories[0].name}")
+            logging.info(f"Found story to continue based on topic '%s': %s", topic, matching_stories[0].name)
             return matching_stories[0]
     
     # Fallback to most recent story
     recent_story = get_most_recent_story(stories_path)
     if recent_story:
-        logging.info(f"Using most recent story for continuation: {recent_story.name}")
+        logging.info(f"Using most recent story for continuation: %s", recent_story.name)
         return recent_story
     
     logging.warning("No existing stories found for continuation")
@@ -691,7 +691,7 @@ def extract_story_context(story_path, max_paragraphs=None):
             info_data = read_from_yaml(info_file)
             context['original_query'] = info_data.get('query', 'Unknown')
         except Exception as e:
-            logging.warning(f"Failed to read story info from {info_file}: {e}")
+            logging.warning(f"Failed to read story info from %s: %s", info_file, e)
     
     # Read all paragraph files
     paragraph_files = list(story_path.glob("paragraph_*.txt"))
@@ -706,7 +706,7 @@ def extract_story_context(story_path, max_paragraphs=None):
             content = read_from_file(file)
             context['paragraphs'].append(content.strip())
         except Exception as e:
-            logging.warning(f"Failed to read paragraph from {file}: {e}")
+            logging.warning(f"Failed to read paragraph from %s: %s", file, e)
     
     context['paragraph_count'] = len(context['paragraphs'])
     return context
@@ -740,14 +740,14 @@ def calibrate_noise_floor(sample_rate=QUERY_SAMPLE_RATE, duration=3.0, percentil
     Returns:
         float: Calibrated noise floor energy level
     """
-    logging.info(f"Calibrating noise floor for {duration} seconds...")
+    logging.info(f"Calibrating noise floor for %s seconds...", duration)
     
     energy_samples = []
     
     def calibration_callback(indata, frames, time, status):
         """Callback to collect energy samples during calibration."""
         if status:
-            logging.warning(f"Audio input status: {status}")
+            logging.warning(f"Audio input status: %s", status)
         
         audio_chunk = indata[:, 0] if indata.shape[1] > 0 else indata.flatten()
         energy = calculate_rms_energy(audio_chunk)
@@ -766,14 +766,14 @@ def calibrate_noise_floor(sample_rate=QUERY_SAMPLE_RATE, duration=3.0, percentil
         
         if energy_samples:
             noise_floor = np.percentile(energy_samples, percentile)
-            logging.info(f"Noise floor calibrated: {noise_floor:.6f} (from {len(energy_samples)} samples)")
+            logging.info(f"Noise floor calibrated: %s (from %s samples)", noise_floor, len(energy_samples))
             return noise_floor
         else:
             logging.warning("No energy samples collected during calibration")
             return 0.01  # Default fallback value
             
     except Exception as e:
-        logging.error(f"Noise floor calibration failed: {e}")
+        logging.error(f"Noise floor calibration failed: %s", e)
         return 0.01  # Default fallback value
 
 

@@ -111,7 +111,7 @@ class ElevenLabsTTSProvider(TTSProvider):
                     return await response.read()
                 else:
                     error_text = await response.text()
-                    raise Exception(f"ElevenLabs API error: {response.status} - {error_text}")
+                    raise Exception(f"ElevenLabs API error: %s - %s" % (response.status, error_text))
     
     async def get_available_voices(self) -> List[Dict[str, str]]:
         """Get ElevenLabs available voices with metadata."""
@@ -210,13 +210,13 @@ class TTSService:
     def add_provider(self, name: str, provider: TTSProvider):
         """Add a TTS provider."""
         self.providers[name] = provider
-        logging.debug(f"Added TTS provider: {name}")
+        logging.debug(f"Added TTS provider: %s" % name)
     
     def set_default_provider(self, provider_name: str):
         """Set the default TTS provider."""
         if provider_name in self.providers:
             self.default_provider = provider_name
-            logging.debug(f"Set default TTS provider to: {provider_name}")
+            logging.debug(f"Set default TTS provider to: %s" % provider_name)
         else:
             raise ValueError(f"Provider '{provider_name}' not found")
     
@@ -255,13 +255,13 @@ class TTSService:
                 # Write audio data to file
                 with open(output_file, "wb") as f:
                     f.write(audio_data)
-                logging.debug(f"Audio saved to {output_file}")
+                logging.debug(f"Audio saved to %s" % output_file)
                 return output_file
             
             return audio_data
             
         except Exception as e:
-            logging.error(f"TTS synthesis failed with {provider_name}: {str(e)}")
+            logging.error(f"TTS synthesis failed with %s: %s" % (provider_name, str(e)))
             raise
     
     async def get_all_voices(self) -> Dict[str, List[Dict[str, str]]]:
@@ -273,7 +273,7 @@ class TTSService:
                 voices = await provider.get_available_voices()
                 all_voices[provider_name] = voices
             except Exception as e:
-                logging.warning(f"Failed to get voices from {provider_name}: {str(e)}")
+                logging.warning(f"Failed to get voices from %s: %s" % (provider_name, str(e)))
                 all_voices[provider_name] = []
         
         return all_voices
@@ -315,7 +315,7 @@ def initialize_tts_service(elevenlabs_key: str = None,
             tts_service.add_provider("elevenlabs", elevenlabs_provider)
             logging.info("ElevenLabs TTS provider initialized")
         except Exception as e:
-            logging.warning(f"Failed to initialize ElevenLabs provider: {str(e)}")
+            logging.warning(f"Failed to initialize ElevenLabs provider: %s" % str(e))
     
     if gemini_key:
         try:
@@ -323,7 +323,7 @@ def initialize_tts_service(elevenlabs_key: str = None,
             tts_service.add_provider("gemini", gemini_provider)
             logging.info("Gemini TTS provider initialized (placeholder - not functional yet)")
         except Exception as e:
-            logging.warning(f"Failed to initialize Gemini provider: {str(e)}")
+            logging.warning(f"Failed to initialize Gemini provider: %s" % str(e))
     
     # Set default provider preference (ElevenLabs if available)
     if "elevenlabs" in tts_service.providers:
