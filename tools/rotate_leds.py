@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Sample script to run pulse test on the LEDs."""
 
-from fably import leds
+try:
+    from fably import leds
+except ImportError:
+    print("Bu script bir LED şeridi gerektirir. IQAudio HAT'te LED yok, çıkılıyor.")
+    exit(1)
 
 # STARTING_COLORS = [0xff0000, 0x00ff00, 0x0000ff]
 STARTING_COLORS = [0xFF0000, 0xFF0000, 0xFF0000]

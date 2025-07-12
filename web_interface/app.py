@@ -436,7 +436,7 @@ def create_fably_interface():
                             max_tokens_slider = gr.Slider(minimum=500, maximum=4000, value=ctx.config.get("max_tokens", 4000), step=100, label="📏 Maksimum Uzunluk")
                     with gr.Column(elem_classes="fably-card"):
                         gr.Markdown("#### 🎵 Ses Ayarları")
-                        new_story_voice = gr.Dropdown(choices=[], label="TTS Sesi", interactive=True, value=ctx.config.get("tts_voice", "rachel"))
+                        new_story_voice = gr.Dropdown(choices=[], label="TTS Sesi", interactive=True, value=ctx.config.get("tts_voice", "rachel"), allow_custom_value=True)
                         refresh_new_voices_btn = gr.Button("🔄 Sesleri Yenile")
 
                 with gr.Row():
@@ -496,7 +496,7 @@ def create_fably_interface():
                                 elevenlabs_base_url = gr.Textbox(label="ElevenLabs Temel URL", value=ctx.config["elevenlabs_url"], interactive=True)
                             with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### ElevenLabs Ayarlari")
-                                elevenlabs_model = gr.Dropdown(choices=[], label="ElevenLabs Modeli", interactive=True, value=ctx.config.get("elevenlabs_model", "eleven_multilingual_v2"))
+                                elevenlabs_model = gr.Dropdown(choices=[], label="ElevenLabs Modeli", interactive=True, value=ctx.config.get("elevenlabs_model", "eleven_multilingual_v2"), allow_custom_value=True)
                                 elevenlabs_model_status = gr.Textbox(label="Model Yükleme Durumu", interactive=False)
                                 elevenlabs_voice_select = gr.Dropdown(choices=[], label="Varsayilan ElevenLabs Sesi", interactive=True)
                                 elevenlabs_voice_status = gr.Textbox(label="Ses Yükleme Durumu", interactive=False)

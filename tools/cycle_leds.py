@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Sample script to run a few colour tests on the strip."""
-from apa102_pi.colorschemes import colorschemes
+try:
+    from apa102_pi.colorschemes import colorschemes
+except ImportError:
+    print("Bu script bir LED şeridi gerektirir. IQAudio HAT'te LED yok, çıkılıyor.")
+    exit(1)
 
 NUM_LED = 3
 BRIGHTNESS = 31
@@ -59,7 +63,7 @@ def main():
     print("Five quick trips through the rainbow")
     my_cycle = colorschemes.TheaterChase(
         num_led=NUM_LED,
-        pause_value=0.04,
+        pause_value=0,
         num_steps_per_cycle=35,
         num_cycles=5,
         order="rgb",
