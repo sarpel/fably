@@ -697,6 +697,12 @@ def create_fably_interface():
         return app
 
 
+def main():
+    """Entry point for launching the Fably web interface from other modules."""
+    fably_app = create_fably_interface()
+    fably_app.launch()
+
+
 # --- Main execution block ---
 if __name__ == "__main__":
     # Create the Gradio interface
