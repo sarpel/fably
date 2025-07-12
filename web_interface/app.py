@@ -290,6 +290,43 @@ def refresh_voices() -> gr.Dropdown:
     )
 
 
+# --- Add value-based story metadata and listening history ---
+STORY_VALUES = [
+    "Dürüstlük", "Yardımlaşma", "Sabır", "Cesaret", "Nezaket", "Paylaşmak", "Sorumluluk", "Empati", "Adalet", "Özgüven",
+    "Çalışkanlık", "Saygı", "Hoşgörü", "Merhamet", "Azim", "Dostluk", "Vefa", "Cömertlik", "Alçakgönüllülük", "Sevgi"
+]
+
+# Simulated story metadata (in real use, load from info.yaml or DB)
+DEFAULT_STORIES = [
+    {
+        "title": f"{value} Hikayesi",
+        "filename": f"story_{i+1}.mp3",
+        "value": value,
+        "summary": f"Bu hikaye çocuklara {value.lower()} değerini öğretir.",
+        "paragraphs": 5
+    }
+    for i, value in enumerate(STORY_VALUES)
+]
+
+# Session-based listening history
+LISTENED_STORIES = set()
+
+# --- Add replay and audio format settings ---
+REPLAY_ALLOWED = True  # Default: allow replay (can be toggled in UI)
+AUDIO_FORMAT = "wav"   # Default: WAV for RPi Zero 2W compatibility
+
+# In the UI, add:
+# - Checkbox: "Hikayeler tekrar dinlenebilsin" (REPLAY_ALLOWED)
+# - Dropdown: "Ses formatı" (AUDIO_FORMAT, options: wav, mp3, ogg)
+
+# Update get_value_filtered_stories to use REPLAY_ALLOWED
+def get_value_filtered_stories(selected_value=None, only_unheard=True):
+    filtered = [s for s in DEFAULT_STORIES if (not selected_value or s["value"] == selected_value)]
+    if only_unheard and not REPLAY_ALLOWED:
+        filtered = [s for s in filtered if s["filename"] not in LISTENED_STORIES]
+    return filtered
+
+
 # --- Gradio UI Definition ---
 def create_fably_interface():
     """
