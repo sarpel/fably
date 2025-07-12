@@ -7,7 +7,7 @@ Supports Turkish and English with Turkish as default
 TRANSLATIONS = {
     'tr': {
         # Main interface
-        'title': '📚 Fably - AI Hikaye Anlatıcısı Yönetim Arayüzü',
+        'title': '📚 Sarpy - AI Hikaye Anlatıcısı Yönetim Arayüzü',
         'subtitle': '*Kapsamlı hikaye oluşturma, düzenleme ve ses üretimi*',
         
         # Tab names
@@ -54,20 +54,6 @@ TRANSLATIONS = {
         # Settings tab
         'settings_header': 'Sağlayıcı Yapılandırma Ayarları',
         'settings_desc': '*Farklı AI servis sağlayıcılarını ayrı ayrı yapılandırın*',
-        
-        # OpenAI settings
-        'openai_config': 'OpenAI API Yapılandırması',
-        'openai_api_key': 'OpenAI API Anahtarı',
-        'openai_base_url': 'OpenAI Temel URL',
-        'openai_models': 'OpenAI Modelleri',
-        'language_model': 'Dil Modeli',
-        'tts_model': 'Metin-Konuşma Modeli',
-        'default_voice': 'Varsayılan OpenAI Sesi',
-        'api_key_required': 'OpenAI servisleri için gerekli',
-        'custom_endpoint_info': 'Özel OpenAI uyumlu uç noktalar için değiştirin',
-        'story_generation_model': 'Hikaye üretimi için model',
-        'higher_quality_tts': 'Daha yüksek kalite için tts-1-hd',
-        'voice_for_tts': 'OpenAI TTS için ses',
         
         # ElevenLabs settings
         'elevenlabs_config': 'ElevenLabs API Yapılandırması',
@@ -202,16 +188,16 @@ TRANSLATIONS = {
         'delete_coming_soon': '🗑️ Silme özelliği yakında geliyor!',
         
         # About tab content
-        'about_title': '📚 Fably - AI Hikaye Anlatıcısı Yönetim Arayüzü',
-        'about_enhanced': '**Fably Hikaye Yönetimi için Gelişmiş Web Arayüzü**',
+        'about_title': '📚 Sarpy - AI Hikaye Anlatıcısı Yönetim Arayüzü',
+        'about_enhanced': '**Sarpy Hikaye Yönetimi için Gelişmiş Web Arayüzü**',
         'about_features': 'Bu kapsamlı arayüz şunları yapmanıza olanak tanır:',
         'about_library': '📖 Hikaye Kütüphanesi',
         'about_library_desc': '- Hikayeler dizininizden ve örneklerden mevcut hikayeleri göz atın\\n- Hikaye meta verilerini görüntüleyin (sorgu, kullanılan model, ses, vb.)\\n- Canlı önizleme ile bireysel paragrafları düzenleyin\\n- Farklı seslerle belirli paragraflar için sesi yeniden oluşturun',
         'about_create': '✨ Yeni Hikaye Oluştur',
-        'about_create_desc': '- Sesli sorgular kaydedin veya metin istekleri yazın\\n- Üretim parametrelerini yapılandırın (sıcaklık, maksimum token)\\n- Çeşitli LLM modelleri kullanarak hikayeler oluşturun\\n- Hikayeleri seçilebilir seslerle sese dönüştürün\\n- Hikayeleri standart Fably formatında kaydedin',
+        'about_create_desc': '- Sesli sorgular kaydedin veya metin istekleri yazın\\n- Üretim parametrelerini yapılandırın (sıcaklık, maksimum token)\\n- Çeşitli LLM modelleri kullanarak hikayeler oluşturun\\n- Hikayeleri seçilebilir seslerle sese dönüştürün\\n- Hikayeleri standart Sarpy formatında kaydedin',
         'about_settings': '⚙️ Ayarlar',
         'about_settings_desc': '- API uç noktalarını yapılandırın (OpenAI, yerel sunucular)\\n- Varsayılan modelleri ve sesleri ayarlayın\\n- Hikaye dizinlerini ve güvenlik ayarlarını yönetin',
-        'about_project_features': '**Fably Proje Özellikleri:**',
+        'about_project_features': '**Sarpy Proje Özellikleri:**',
         'about_child_safe': '- 🎯 **Çocuk Güvenli**: Yerleşik sorgu korumaları ve içerik filtreleme',
         'about_low_latency': '- 🚀 **Düşük Gecikme**: Hızlı yanıt için akış üretimi',
         'about_self_hostable': '- 🏠 **Kendi Sunucunuzda Barındırılabilir**: Ollama aracılığıyla yerel AI modelleri desteği',
@@ -221,7 +207,7 @@ TRANSLATIONS = {
         'about_req_python': '- Python 3.8+',
         'about_req_api': '- OpenAI API anahtarı (veya yerel AI sunucu kurulumu)',
         'about_req_audio': '- Ses etkileşimi için mikrofon ve hoparlörler',
-        'about_more_info': 'Daha fazla bilgi için [Fably GitHub deposunu](https://github.com/stefanom/fably) ziyaret edin.',
+        'about_more_info': 'Daha fazla bilgi için [Sarpy GitHub deposunu](https://github.com/stefanom/fably) ziyaret edin.',
         
         # Voice options and model descriptions
         'voice_default': 'Varsayılan Ses',
@@ -237,7 +223,7 @@ TRANSLATIONS = {
     
     'en': {
         # Main interface
-        'title': '📚 Fably - AI Storyteller Management Interface',
+        'title': '📚 Sarpy - AI Storyteller Management Interface',
         'subtitle': '*Comprehensive story creation, editing, and audio generation*',
         
         # Tab names
@@ -284,20 +270,6 @@ TRANSLATIONS = {
         # Settings tab
         'settings_header': 'Provider Configuration Settings',
         'settings_desc': '*Configure different AI service providers separately*',
-        
-        # OpenAI settings
-        'openai_config': 'OpenAI API Configuration',
-        'openai_api_key': 'OpenAI API Key',
-        'openai_base_url': 'OpenAI Base URL',
-        'openai_models': 'OpenAI Models',
-        'language_model': 'Language Model',
-        'tts_model': 'Text-to-Speech Model',
-        'default_voice': 'Default OpenAI Voice',
-        'api_key_required': 'Required for OpenAI services',
-        'custom_endpoint_info': 'Change for custom OpenAI-compatible endpoints',
-        'story_generation_model': 'Model for story generation',
-        'higher_quality_tts': 'tts-1-hd for higher quality',
-        'voice_for_tts': 'Voice for OpenAI TTS',
         
         # ElevenLabs settings
         'elevenlabs_config': 'ElevenLabs API Configuration',
@@ -432,16 +404,16 @@ TRANSLATIONS = {
         'delete_coming_soon': '🗑️ Delete feature coming soon!',
         
         # About tab content
-        'about_title': '📚 Fably - AI Storyteller Management Interface',
-        'about_enhanced': '**Enhanced Web Interface for Fably Story Management**',
+        'about_title': '📚 Sarpy - AI Storyteller Management Interface',
+        'about_enhanced': '**Enhanced Web Interface for Sarpy Story Management**',
         'about_features': 'This comprehensive interface allows you to:',
         'about_library': '📖 Story Library',
         'about_library_desc': '- Browse existing stories from your stories directory and examples\\n- View story metadata (query, model used, voice, etc.)\\n- Edit individual paragraphs with live preview\\n- Regenerate audio for specific paragraphs with different voices',
         'about_create': '✨ Create New Story',
-        'about_create_desc': '- Record voice queries or type text requests\\n- Configure generation parameters (temperature, max tokens)\\n- Generate stories using various LLM models\\n- Convert stories to audio with selectable voices\\n- Save stories in the standard Fably format',
+        'about_create_desc': '- Record voice queries or type text requests\\n- Configure generation parameters (temperature, max tokens)\\n- Generate stories using various LLM models\\n- Convert stories to audio with selectable voices\\n- Save stories in the standard Sarpy format',
         'about_settings': '⚙️ Settings',
         'about_settings_desc': '- Configure API endpoints (OpenAI, local servers)\\n- Set default models and voices\\n- Manage story directories and safety settings',
-        'about_project_features': '**Fably Project Features:**',
+        'about_project_features': '**Sarpy Project Features:**',
         'about_child_safe': '- 🎯 **Child-Safe**: Built-in query guards and content filtering',
         'about_low_latency': '- 🚀 **Low Latency**: Streaming generation for quick response',
         'about_self_hostable': '- 🏠 **Self-Hostable**: Support for local AI models via Ollama',
@@ -451,7 +423,7 @@ TRANSLATIONS = {
         'about_req_python': '- Python 3.8+',
         'about_req_api': '- OpenAI API key (or local AI server setup)',
         'about_req_audio': '- Microphone and speakers for voice interaction',
-        'about_more_info': 'For more information, visit the [Fably GitHub repository](https://github.com/stefanom/fably).',
+        'about_more_info': 'For more information, visit the [Sarpy GitHub repository](https://github.com/stefanom/fably).',
         
         # Voice options and model descriptions
         'voice_default': 'Default Voice',

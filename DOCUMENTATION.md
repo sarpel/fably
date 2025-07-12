@@ -601,3 +601,27 @@ Fably is designed with these core principles:
 **Fably ile hayal dünyası sınırsız! 🎭✨**
 
 *This project is lovingly developed to provide safe technology experiences and enhance creativity for 5-year-old children.*
+
+# mDNS ve masal.local ile Web Arayüzüne Erişim
+
+Fably web arayüzü artık yerel ağda `masal.local` adresiyle otomatik olarak erişilebilir. Bu özellik, python-zeroconf kütüphanesi ile sağlanır ve cihazınızın ağda kolayca bulunmasını sağlar.
+
+## Nasıl Çalışır?
+- Web arayüzü başlatıldığında, `masal.local:7860` adresi mDNS ile yayınlanır.
+- Aynı ağdaki diğer cihazlar, tarayıcıya `http://masal.local:7860` yazarak arayüze ulaşabilir.
+
+## Desteklenen Platformlar
+- **Linux (Raspberry Pi dahil):** Avahi veya benzeri mDNS servisleri otomatik çalışır.
+- **MacOS:** Bonjour desteğiyle otomatik çalışır.
+- **Windows:** Ek Bonjour kurulumu gerekebilir.
+
+## Sorun Giderme
+- Eğer `masal.local` açılmıyorsa:
+  - Aynı ağda olduğunuzdan emin olun.
+  - Linux'ta `avahi-daemon` servisi çalışıyor olmalı.
+  - Windows'ta Bonjour servisi kurulu olmalı.
+  - Güvenlik duvarı veya ağ kısıtlamalarını kontrol edin.
+
+## Notlar
+- mDNS yayını sadece yerel ağda çalışır, internetten erişim için DNS ayarı gerekir.
+- Port numarası (7860) gereklidir: `http://masal.local:7860`

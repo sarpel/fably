@@ -7,7 +7,6 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'openai>=1.0.0',
         'requests',
         'click',
         'python-dotenv',

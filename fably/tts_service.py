@@ -12,7 +12,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-import openai
 import requests
 import soundfile as sf
 
@@ -34,61 +33,6 @@ class TTSProvider(ABC):
     def get_supported_formats(self) -> List[str]:
         """Get list of supported audio formats."""
         pass
-
-
-class OpenAITTSProvider(TTSProvider):
-    """OpenAI TTS provider implementation."""
-    
-    AVAILABLE_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer", "ash", "sage", "coral"]
-    SUPPORTED_FORMATS = ["mp3", "opus", "aac", "flac", "wav", "pcm"]
-    
-    def __init__(self, api_key: str, base_url: str = "https://api.openai.com/v1"):
-        self.client = openai.AsyncClient(api_key=api_key, base_url=base_url)
-        self.model = "tts-1"  # Default model
-    
-    async def synthesize(self, text: str, voice: str, **kwargs) -> bytes:
-        """Synthesize speech using OpenAI TTS API."""
-        model = kwargs.get("model", self.model)
-        response_format = kwargs.get("format", "mp3")
-        
-        response = await self.client.audio.speech.create(
-            input=text,
-            model=model,
-            voice=voice,
-            response_format=response_format,
-        )
-        
-        return response.content
-    
-    async def get_available_voices(self) -> List[Dict[str, str]]:
-        """Get OpenAI available voices with metadata."""
-        voices = []
-        for voice in self.AVAILABLE_VOICES:
-            voices.append({
-                "id": voice,
-                "name": voice.capitalize(),
-                "description": f"OpenAI {voice.capitalize()} voice",
-                "gender": self._get_voice_gender(voice),
-                "provider": "openai"
-            })
-        return voices
-    
-    def get_supported_formats(self) -> List[str]:
-        """Get OpenAI supported audio formats."""
-        return self.SUPPORTED_FORMATS
-    
-    def _get_voice_gender(self, voice: str) -> str:
-        """Get approximate gender for OpenAI voices."""
-        # Approximate gender mapping for OpenAI voices
-        gender_map = {
-            "alloy": "neutral",
-            "echo": "male", 
-            "fable": "female",
-            "onyx": "male",
-            "nova": "female",
-            "shimmer": "female"
-        }
-        return gender_map.get(voice, "neutral")
 
 
 class ElevenLabsTTSProvider(TTSProvider):

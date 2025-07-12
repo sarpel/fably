@@ -52,8 +52,6 @@ class FablyWebContext:
         Loads default settings from environment variables or sets fallback values.
         """
         return {
-            "openai_api_key": os.getenv("OPENAI_API_KEY", ""),
-            "openai_url": "https://api.openai.com/v1",
             "llm_model": "gemini-2.5-flash-lite",
             "tts_provider": "elevenlabs",
             "tts_voice": "rachel",
@@ -64,8 +62,6 @@ class FablyWebContext:
             "gemini_url": "https://generativelanguage.googleapis.com/v1beta",
             "llm_temperature": 1.0,
             "max_tokens": 4000,
-            "wakeword_engine": "ppn",
-            "wakeword_model": "models/hey_elsa.ppn",
             "gpio_button": True,
             "noise_reduction": True,
             "noise_sensitivity": 2.0,
@@ -164,10 +160,6 @@ async def get_available_voices() -> List[Tuple[str, str]]:
     Gets a list of available TTS voices from different providers.
     """
     voices = []
-    openai_voices = ["nova", "alloy", "echo", "fable", "onyx", "shimmer"]
-    for voice in openai_voices:
-        voices.append((f"OpenAI: {voice.title()}", f"openai:{voice}"))
-
     if ctx.config.get("elevenlabs_api_key"):
         elevenlabs_voices = ["rachel", "adam", "arnold", "josh", "sam"]
         for voice in elevenlabs_voices:
@@ -325,7 +317,7 @@ def create_fably_interface():
     }
     """
     with gr.Blocks(
-        title="🎭 Fably - AI Hikaye Yönetim Sistemi",
+        title="🎭 Sarpy - AI Hikaye Yönetim Sistemi",
         theme=Soft(),
         css=custom_css
     ) as app:
@@ -333,7 +325,7 @@ def create_fably_interface():
         with gr.Row():
             gr.HTML("""
             <div class="fably-header">
-                <h1>🎭 Fably - Profesyonel AI Hikaye Sistemi</h1>
+                <h1>🎭 Sarpy - Profesyonel AI Hikaye Sistemi</h1>
                 <p>Yapay zeka destekli hikaye oluşturma ve yönetim platformu</p>
             </div>
             """)
@@ -416,7 +408,7 @@ def create_fably_interface():
                         prompt_input = gr.Textbox(
                             label="Özel Prompt (İsteğe Bağlı)",
                             placeholder="Hikayeleri daha yaratıcı yap...",
-                            value="Fably İçin Sistem Prompt'u\nSen, 5 yaşındaki çocuklar için harika masallar anlatan sihirli bir masalcı olan Fably'sin. Senin görevin, çocukları hayal gücüyle mutlu etmek.\n\nMASAL OLUŞTURMA KURALLARI:\n\nDil ve Üslup:\n\nMasallarını her zaman 5 yaşındaki bir çocuğun anlayabileceği basit, akıcı ve net bir Türkçe ile anlat.\n\nDilin sıcak, arkadaş canlısı ve ilgi çekici olsun.\n\nYapı ve İçerik:\n\nKullanıcı senden ne tür bir masal isterse istesin, 5-6 paragraftan oluşan, sürükleyici bir masal oluştur.\n\nMasalların her zaman yaşa uygun, hayal gücü geniş ve pozitif mesajlar içermelidir.\n\nHikayelerin net bir başlangıcı, gelişmesi ve sonu olmalıdır.\n\nİçerisinde sevimli karakterler ve basit maceralar barındırsın.\n\nKonu İşleme:\n\nHayvanlar, uzay, prensesler, robotlar veya günlük maceralar gibi her türlü masal talebini kabul et.\n\nEğer istek belirsiz ise, sihirli ve eğlenceli bir masal yarat.\n\nMASAL DEVAM ETTİRME:\n\nEğer mevcut bir masalı devam ettiriyorsan, şu kurallara uymalısın:\n\nÖnceki bölümdeki karakterlere, mekana ve atmosfere sadık kal.\n\nHikayenin kaldığı yerden doğal bir şekilde devam et.\n\nAnlatım tarzını ve sesini koru.\n\nÖnceki olayların üzerine inşa ederek hikayeyi ilgi çekici bir şekilde ilerlet.\n\nMASAL DIŞI TALEPLER:\n\nEğer kullanıcı masal dışında bir soru sorarsa (\"Nasılsın?\", \"Hava nasıl?\" gibi), onu nazikçe masal istemeye yönlendir.\n\nÖrnek: \"Ben hep hikaye anlatmaya hazırım! Hangi konuda hikaye istersin?\"\n\nÖrnek: \"Hava hikayeleri çok güzel! Bulutlar, yağmur ya da güneş hakkında hikaye istersen anlatabilirim!\"\n\nUnutma, senin varoluş amacın masallar anlatmak ve çocukları mutlu etmek!",
+                            value="Sarpy İçin Sistem Prompt'u\nSen, 5 yaşındaki çocuklar için harika masallar anlatan sihirli bir masalcı olan Sarpy'sin. Senin görevin, çocukları hayal gücüyle mutlu etmek.\n\nMASAL OLUŞTURMA KURALLARI:\n\nDil ve Üslup:\n\nMasallarını her zaman 5 yaşındaki bir çocuğun anlayabileceği basit, akıcı ve net bir Türkçe ile anlat.\n\nDilin sıcak, arkadaş canlısı ve ilgi çekici olsun.\n\nYapı ve İçerik:\n\nKullanıcı senden ne tür bir masal isterse istesin, 5-6 paragraftan oluşan, sürükleyici bir masal oluştur.\n\nMasalların her zaman yaşa uygun, hayal gücü geniş ve pozitif mesajlar içermelidir.\n\nHikayelerin net bir başlangıcı, gelişmesi ve sonu olmalıdır.\n\nİçerisinde sevimli karakterler ve basit maceralar barındırsın.\n\nKonu İşleme:\n\nHayvanlar, uzay, prensesler, robotlar veya günlük maceralar gibi her türlü masal talebini kabul et.\n\nEğer istek belirsiz ise, sihirli ve eğlenceli bir masal yarat.\n\nMASAL DEVAM ETTİRME:\n\nEğer mevcut bir masalı devam ettiriyorsan, şu kurallara uymalısın:\n\nÖnceki bölümdeki karakterlere, mekana ve atmosfere sadık kal.\n\nHikayenin kaldığı yerden doğal bir şekilde devam et.\n\nAnlatım tarzını ve sesini koru.\n\nÖnceki olayların üzerine inşa ederek hikayeyi ilgi çekici bir şekilde ilerlet.\n\nMASAL DIŞI TALEPLER:\n\nEğer kullanıcı masal dışında bir soru sorarsa (\"Nasılsın?\", \"Hava nasıl?\" gibi), onu nazikçe masal istemeye yönlendir.\n\nÖrnek: \"Ben hep hikaye anlatmaya hazırım! Hangi konuda hikaye istersin?\"\n\nÖrnek: \"Hava hikayeleri çok güzel! Bulutlar, yağmur ya da güneş hakkında hikaye istersen anlatabilirim!\"\n\nUnutma, senin varoluş amacın masallar anlatmak ve çocukları mutlu etmek!",
                             lines=2,
                             interactive=True
                         )
@@ -448,8 +440,8 @@ def create_fably_interface():
                         with gr.Row():
                             with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### 🤖 Varsayılan AI Sağlayıcıları")
-                                default_llm_provider = gr.Dropdown(choices=["openai", "gemini"], value="openai", label="Varsayılan LLM Sağlayıcısı", interactive=True)
-                                default_tts_provider = gr.Dropdown(choices=["openai", "elevenlabs"], value="openai", label="Varsayılan TTS Sağlayıcısı", interactive=True)
+                                default_llm_provider = gr.Dropdown(choices=["gemini"], value="gemini", label="Varsayılan LLM Sağlayıcısı", interactive=True)
+                                default_tts_provider = gr.Dropdown(choices=["elevenlabs"], value="elevenlabs", label="Varsayılan TTS Sağlayıcısı", interactive=True)
                             with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### 📊 Varsayılan Parametreler")
                                 default_temperature = gr.Slider(minimum=0.1, maximum=2.0, value=ctx.config.get("llm_temperature", 1.0), step=0.1, label="Varsayılan Sıcaklık", interactive=True)
@@ -461,20 +453,7 @@ def create_fably_interface():
                                 noise_sensitivity = gr.Slider(minimum=0.1, maximum=10.0, value=ctx.config.get("noise_sensitivity", 2.0), step=0.1, label="Gürültü Hassasiyeti", interactive=True)
                             with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### 🎛️ Donanım Kontrolleri")
-                                wakeword_engine = gr.Dropdown(choices=["disabled", "ppn", "onnx", "tflite"], value=ctx.config.get("wakeword_engine", "ppn"), label="Uyandırma Kelimesi Motoru", interactive=True)
                                 gpio_button_enabled = gr.Checkbox(label="GPIO Düğmesi Aktif", value=ctx.config.get("gpio_button", True), interactive=True)
-
-                    with gr.Tab("🤖 OpenAI"):
-                        with gr.Row():
-                            with gr.Column(elem_classes="fably-card"):
-                                gr.Markdown("#### OpenAI API Yapılandırması")
-                                openai_api_key = gr.Textbox(label="OpenAI API Anahtarı", value=ctx.config.get("openai_api_key", ""), type="password", interactive=True)
-                                openai_base_url = gr.Textbox(label="OpenAI Temel URL", value=ctx.config["openai_url"], interactive=True)
-                            with gr.Column(elem_classes="fably-card"):
-                                gr.Markdown("#### OpenAI Modelleri")
-                                openai_llm_model_val = ctx.config["llm_model"] if "gpt" in ctx.config["llm_model"] else "gpt-4o-mini"
-                                openai_llm_model = gr.Dropdown(choices=["gpt-4o", "gpt-4o-mini", "gpt-4-turbo-preview", "gpt-3.5-turbo"], value=openai_llm_model_val, label="OpenAI LLM Modeli", interactive=True)
-                                openai_tts_model = gr.Dropdown(choices=["tts-1", "tts-1-hd"], value="tts-1", label="OpenAI TTS Modeli", interactive=True)
 
                     with gr.Tab("ElevenLabs"):
                         with gr.Row():
@@ -642,13 +621,13 @@ def create_fably_interface():
             try:
                 # args sırası settings_inputs ile aynı olmalı
                 keys = [
-                    "openai_api_key", "openai_url", "llm_model", "tts_model",
+                    "llm_model", "tts_model",
                     "elevenlabs_api_key", "elevenlabs_url", "elevenlabs_model",
                     "gemini_api_key", "gemini_url", "gemini_model",
                     "llm_provider", "tts_provider",
                     "llm_temperature", "max_tokens",
                     "noise_reduction", "noise_sensitivity",
-                    "wakeword_engine", "gpio_button"
+                    "gpio_button"
                 ]
                 for k, v in zip(keys, args):
                     ctx.config[k] = v
@@ -740,13 +719,13 @@ def create_fably_interface():
 
         # Settings Tab
         settings_inputs = [
-            openai_api_key, openai_base_url, openai_llm_model, openai_tts_model,
+            gemini_model,
             elevenlabs_api_key, elevenlabs_base_url,
             gemini_api_key, gemini_base_url, gemini_model,
             default_llm_provider, default_tts_provider,
             default_temperature, default_max_tokens,
             noise_reduction_enabled, noise_sensitivity,
-            wakeword_engine, gpio_button_enabled
+            gpio_button_enabled
         ]
         save_settings_btn.click(
             fn=handle_settings_save,

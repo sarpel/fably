@@ -405,7 +405,7 @@ def main(ctx, query=None):
                 logging.info("Button held - shutting down...")
                 ctx.running = False
 
-            ctx.button = Button(pin=ctx.button_gpio_pin, hold_time=ctx.hold_time)
+            ctx.button = Button(ctx.button_gpio_pin, True, hold_time=ctx.hold_time)
             ctx.button.when_pressed = lambda: pressed(ctx)
             ctx.button.when_released = lambda: released(ctx)
             ctx.button.when_held = lambda: held(ctx)
