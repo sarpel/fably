@@ -906,3 +906,45 @@ def record_until_silence_with_noise_reduction(
 
     audio_data = np.concatenate(npframes, axis=0) if npframes else np.array([])
     return audio_data, sample_rate, " ".join(query)
+
+
+def find_next_unread_story(stories_path):
+    """
+    Scan stories_path for the first story folder with story_info.json where 'read' is false or missing.
+    Return the Path to that story folder, or None if all are read.
+    """
+    stories = []
+    for story_dir in sorted(Path(stories_path).iterdir()):
+        if story_dir.is_dir():
+            info_path = story_dir / "story_info.json"
+            if info_path.exists():
+                try:
+                    with open(info_path, "r", encoding="utf-8") as f:
+                        info = json.load(f)
+                except Exception:
+                    info = {}
+            else:
+                info = {}
+            if not info.get("read", False):
+                stories.append((info.get("order", 0), story_dir))
+    if stories:
+        # Return the one with the lowest order (or first alphabetically)
+        return sorted(stories, key=lambda x: x[0])[0][1]
+    return None
+
+def mark_story_as_read(story_path):
+    """
+    Set 'read': true in story_info.json for the given story_path.
+    Create story_info.json if it does not exist.
+    """
+    info_path = Path(story_path) / "story_info.json"
+    info = {}
+    if info_path.exists():
+        try:
+            with open(info_path, "r", encoding="utf-8") as f:
+                info = json.load(f)
+        except Exception:
+            info = {}
+    info["read"] = True
+    with open(info_path, "w", encoding="utf-8") as f:
+        json.dump(info, f, ensure_ascii=False, indent=2)

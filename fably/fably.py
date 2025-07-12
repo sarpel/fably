@@ -378,56 +378,24 @@ def main(ctx, query=None):
     if ctx.loop and (Button or (hasattr(ctx, 'gpio_button', False))):
         ctx.leds.start()
         utils.play_sound("startup", audio_driver=ctx.sound_driver)
-
-        # Let's introduce ourselves
         utils.play_sound("hi", audio_driver=ctx.sound_driver)
-
-        # Enhanced GPIO button functionality
         if Button and getattr(ctx, 'gpio_button', False):
             def pressed(ctx):
-                ctx.press_time = time.time()
-                logging.debug("Button pressed")
-
-            def released(ctx):
-                release_time = time.time()
-                pressed_for = release_time - ctx.press_time
-                logging.debug("Button released after %f seconds", pressed_for)
-
-                if pressed_for < ctx.button.hold_time:
-                    if not ctx.talking:
-                        logging.info("Button press - telling a story...")
-                        tell_story(ctx, terminate=False)
-                        logging.debug("Forked the storytelling thread")
-                    else:
-                        logging.debug("Button press ignored - already telling a story")
-
-            def held(ctx):
-                logging.info("Button held - shutting down...")
-                ctx.running = False
-
-            ctx.button = Button(ctx.button_gpio_pin, True, hold_time=ctx.hold_time)
+                # Find the next unread story
+                next_story = utils.find_next_unread_story(ctx.stories_path)
+                if next_story:
+                    utils.mark_story_as_read(next_story)
+                    logging.info(f"Button press - reading story: {next_story.name}")
+                    tell_story(ctx, query=f"read {next_story.name}", terminate=False)
+                else:
+                    logging.info("No unread stories left.")
+            ctx.button = Button(ctx.button_gpio_pin)
             ctx.button.when_pressed = lambda: pressed(ctx)
-            ctx.button.when_released = lambda: released(ctx)
-            ctx.button.when_held = lambda: held(ctx)
-
-            # Add voice cycling functionality if enabled
-            if hasattr(ctx, 'voice_cycle') and ctx.voice_cycle:
-                try:
-                    from fably.cli import add_voice_cycling_to_button_handler
-                    add_voice_cycling_to_button_handler(ctx)
-                    logging.info("Voice cycling enabled - double-tap button to change voice")
-                except Exception as e:
-                    logging.warning(f"Failed to enable voice cycling: {str(e)}")
-
-            logging.info("GPIO button active on pin %d", ctx.button_gpio_pin)
-
-        # Give instructions
+            # Remove when_released and when_held logic
+            # Remove hold_time and related code
+            # Remove voice cycling and shutdown on hold
         utils.play_sound("instructions", audio_driver=ctx.sound_driver)
-
-        # Stop the LEDs once we're ready
         ctx.leds.stop()
-        
-        # Keep the main thread running and handle cleanup
         try:
             while ctx.running:
                 time.sleep(1.0)
