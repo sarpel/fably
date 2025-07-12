@@ -476,14 +476,23 @@ def create_fably_interface():
                     
                     with gr.Tab("Google Gemini"):
                         with gr.Row():
-                             with gr.Column(elem_classes="fably-card"):
+                            with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### Google Gemini Yapilandirmasi")
                                 gemini_api_key = gr.Textbox(label="Gemini API Anahtari", value=ctx.config.get("gemini_api_key", ""), type="password", interactive=True)
                                 gemini_base_url = gr.Textbox(label="Gemini Temel URL", value=ctx.config["gemini_url"], interactive=True)
-                             with gr.Column(elem_classes="fably-card"):
+                            with gr.Column(elem_classes="fably-card"):
                                 gr.Markdown("#### Gemini Modelleri")
-                                gemini_model_val = ctx.config["llm_model"] if "gemini" in ctx.config["llm_model"] else "gemini-1.5-flash"
-                                gemini_model = gr.Dropdown(choices=["gemini-1.5-pro", "gemini-1.5-flash"], value=gemini_model_val, label="Gemini LLM Modeli", interactive=True)
+                                gemini_model_val = ctx.config["llm_model"] if "gemini" in ctx.config["llm_model"] else "gemini-2.5-flash-lite"
+                                gemini_model = gr.Dropdown(
+                                    choices=[
+                                        "gemini-2.5-flash-lite",
+                                        "gemini-2.5-flash",
+                                        "gemini-2.5-pro"
+                                    ],
+                                    value=gemini_model_val,
+                                    label="Gemini LLM Modeli (Stable)",
+                                    interactive=True
+                                )
 
                 with gr.Row():
                     save_settings_btn = gr.Button("Tum Ayarlari Kaydet", variant="primary", size="lg")
