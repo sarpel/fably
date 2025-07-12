@@ -624,8 +624,13 @@ def create_fably_interface():
 
         def handle_load_elevenlabs_voices(api_key, base_url):
             if not api_key or not base_url:
-                return [("API anahtarı veya URL eksik", "")]
-            return fetch_elevenlabs_voices(api_key, base_url)
+                return gr.update(choices=[], value=None, label="Varsayılan ElevenLabs Sesi", visible=True)
+            voices = fetch_elevenlabs_voices(api_key, base_url)
+            valid_voices = [(name, vid) for name, vid in voices if vid]
+            if not valid_voices:
+                return gr.update(choices=[], value=None, visible=True)
+            # Doğru format: [(label, value), ...]
+            return gr.update(choices=valid_voices, value=valid_voices[0][1], visible=True)
 
         def initialize_voice_dropdowns():
             voice_options = asyncio.run(get_available_voices())
