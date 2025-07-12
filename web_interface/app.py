@@ -700,7 +700,7 @@ def create_fably_interface():
 def main():
     """Entry point for launching the Fably web interface from other modules."""
     fably_app = create_fably_interface()
-    fably_app.launch()
+    fably_app.launch(server_name="0.0.0.0", server_port=7860)
 
 
 # --- Main execution block ---
@@ -709,4 +709,4 @@ if __name__ == "__main__":
     fably_app = create_fably_interface()
     
     # Launch the web server
-    fably_app.launch()
+    fably_app.launch(server_name="0.0.0.0", server_port=7860)
