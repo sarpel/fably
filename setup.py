@@ -71,7 +71,7 @@ setup(
         "Topic :: Education",
     ],
     description="AI storyteller for children - Turkish language optimized for 5-year-old",
-    long_description=open("DOCUMENTATION.md", encoding="utf-8").read(),
+    long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     author="Fably Contributors",
     author_email="fably@example.com",
