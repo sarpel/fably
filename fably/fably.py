@@ -17,7 +17,6 @@ except (ImportError, NotImplementedError):
     Button = None
 
 from fably import utils
-from fably.wakeword import create_wakeword_detector, get_available_engines
 
 
 def generate_story(ctx, query, prompt):
@@ -376,37 +375,15 @@ def main(ctx, query=None):
         else:
             ctx.noise_floor = None
 
-    if ctx.loop and (Button or (hasattr(ctx, 'wakeword_engine') and ctx.wakeword_engine)):
+    if ctx.loop and (Button or (hasattr(ctx, 'gpio_button', False))):
         ctx.leds.start()
         utils.play_sound("startup", audio_driver=ctx.sound_driver)
 
         # Let's introduce ourselves
         utils.play_sound("hi", audio_driver=ctx.sound_driver)
 
-        # Initialize wakeword detector if enabled
-        wakeword_detector = None
-        if hasattr(ctx, 'wakeword_engine') and ctx.wakeword_engine and hasattr(ctx, 'wakeword_model') and ctx.wakeword_model:
-            try:
-                wakeword_detector = create_wakeword_detector(
-                    engine=ctx.wakeword_engine,
-                    model_path=ctx.wakeword_model,
-                    sensitivity=getattr(ctx, 'wakeword_sensitivity', 0.5)
-                )
-                
-                def on_wakeword_detected():
-                    if not ctx.talking:
-                        logging.info("Wakeword detected! Starting story...")
-                        tell_story(ctx, terminate=False)
-                
-                wakeword_detector.start_listening(on_wakeword_detected)
-                logging.info(f"Wakeword detection active ({ctx.wakeword_engine})")
-                
-            except Exception as e:
-                logging.error(f"Failed to initialize wakeword detector: {e}")
-                wakeword_detector = None
-
         # Enhanced GPIO button functionality
-        if Button and (not wakeword_detector or getattr(ctx, 'gpio_button', False)):
+        if Button and getattr(ctx, 'gpio_button', False):
             def pressed(ctx):
                 ctx.press_time = time.time()
                 logging.debug("Button pressed")
@@ -426,8 +403,6 @@ def main(ctx, query=None):
 
             def held(ctx):
                 logging.info("Button held - shutting down...")
-                if wakeword_detector:
-                    wakeword_detector.stop_listening()
                 ctx.running = False
 
             ctx.button = Button(pin=ctx.button_gpio_pin, hold_time=ctx.hold_time)
@@ -446,11 +421,8 @@ def main(ctx, query=None):
 
             logging.info("GPIO button active on pin %d", ctx.button_gpio_pin)
 
-        # Give instructions based on input method
-        if wakeword_detector:
-            utils.play_sound("instructions_wakeword", audio_driver=ctx.sound_driver, fallback_text="Say the wakeword to start")
-        else:
-            utils.play_sound("instructions", audio_driver=ctx.sound_driver)
+        # Give instructions
+        utils.play_sound("instructions", audio_driver=ctx.sound_driver)
 
         # Stop the LEDs once we're ready
         ctx.leds.stop()
@@ -460,8 +432,7 @@ def main(ctx, query=None):
             while ctx.running:
                 time.sleep(1.0)
         finally:
-            if wakeword_detector:
-                wakeword_detector.stop_listening()
+            pass
     else:
         # Here the query can be None, but it's ok.
         # We will record one from the user in that case.
