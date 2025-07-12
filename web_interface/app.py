@@ -176,19 +176,6 @@ async def get_available_voices() -> List[Tuple[str, str]]:
 
 
 # --- Core Logic Functions ---
-def transcribe_audio(audio_file) -> str:
-    """
-    (Placeholder) Transcribes audio input to text.
-    """
-    if not audio_file:
-        return "❌ Ses dosyası bulunamadı"
-    try:
-        # This is a placeholder; actual transcription logic would go here.
-        return f"🎤 Ses dosyası işlendi: {Path(audio_file).name}"
-    except Exception as e:
-        return f"❌ Ses işleme hatası: {str(e)}"
-
-
 async def generate_story_content(
     query: str, prompt: str = "", temperature: float = 0.9, max_tokens: int = 2000
 ) -> str:
@@ -406,16 +393,17 @@ def create_fably_interface():
             # --- Create New Story Tab ---
             with gr.Tab("✨ Yeni Hikaye Oluştur"):
                 with gr.Row():
+                    # Remove the microphone/audio input column and button
+                    # with gr.Column(elem_classes="fably-card"):
+                    #     gr.Markdown("#### 🎤 Sesli Sorgu")
+                    #     voice_query = gr.Audio(
+                    #         label="Hikaye İsteğinizi Kaydedin",
+                    #         sources=["microphone"],
+                    #         type="filepath"
+                    #     )
+                    #     transcribe_btn = gr.Button("📝 Sesi Metne Çevir")
                     with gr.Column(elem_classes="fably-card"):
-                        gr.Markdown("#### 🎤 Sesli Sorgu")
-                        voice_query = gr.Audio(
-                            label="Hikaye İsteğinizi Kaydedin",
-                            sources=["microphone"],
-                            type="filepath"
-                        )
-                        transcribe_btn = gr.Button("📝 Sesi Metne Çevir")
-                    with gr.Column(elem_classes="fably-card"):
-                        gr.Markdown("#### ✍️ Metin Girişi")
+                        gr.Markdown("#### ✍️ Masal İsteği")
                         transcribed_query = gr.Textbox(
                             label="Hikaye İsteği",
                             placeholder="Örnek: Uzayda yaşayan kediler hakkında bir hikaye anlat",
@@ -428,6 +416,7 @@ def create_fably_interface():
                         prompt_input = gr.Textbox(
                             label="Özel Prompt (İsteğe Bağlı)",
                             placeholder="Hikayeleri daha yaratıcı yap...",
+                            value="Fably İçin Sistem Prompt'u\nSen, 5 yaşındaki çocuklar için harika masallar anlatan sihirli bir masalcı olan Fably'sin. Senin görevin, çocukları hayal gücüyle mutlu etmek.\n\nMASAL OLUŞTURMA KURALLARI:\n\nDil ve Üslup:\n\nMasallarını her zaman 5 yaşındaki bir çocuğun anlayabileceği basit, akıcı ve net bir Türkçe ile anlat.\n\nDilin sıcak, arkadaş canlısı ve ilgi çekici olsun.\n\nYapı ve İçerik:\n\nKullanıcı senden ne tür bir masal isterse istesin, 5-6 paragraftan oluşan, sürükleyici bir masal oluştur.\n\nMasalların her zaman yaşa uygun, hayal gücü geniş ve pozitif mesajlar içermelidir.\n\nHikayelerin net bir başlangıcı, gelişmesi ve sonu olmalıdır.\n\nİçerisinde sevimli karakterler ve basit maceralar barındırsın.\n\nKonu İşleme:\n\nHayvanlar, uzay, prensesler, robotlar veya günlük maceralar gibi her türlü masal talebini kabul et.\n\nEğer istek belirsiz ise, sihirli ve eğlenceli bir masal yarat.\n\nMASAL DEVAM ETTİRME:\n\nEğer mevcut bir masalı devam ettiriyorsan, şu kurallara uymalısın:\n\nÖnceki bölümdeki karakterlere, mekana ve atmosfere sadık kal.\n\nHikayenin kaldığı yerden doğal bir şekilde devam et.\n\nAnlatım tarzını ve sesini koru.\n\nÖnceki olayların üzerine inşa ederek hikayeyi ilgi çekici bir şekilde ilerlet.\n\nMASAL DIŞI TALEPLER:\n\nEğer kullanıcı masal dışında bir soru sorarsa (\"Nasılsın?\", \"Hava nasıl?\" gibi), onu nazikçe masal istemeye yönlendir.\n\nÖrnek: \"Ben hep hikaye anlatmaya hazırım! Hangi konuda hikaye istersin?\"\n\nÖrnek: \"Hava hikayeleri çok güzel! Bulutlar, yağmur ya da güneş hakkında hikaye istersen anlatabilirim!\"\n\nUnutma, senin varoluş amacın masallar anlatmak ve çocukları mutlu etmek!",
                             lines=2,
                             interactive=True
                         )
@@ -437,7 +426,6 @@ def create_fably_interface():
                     with gr.Column(elem_classes="fably-card"):
                         gr.Markdown("#### 🎵 Ses Ayarları")
                         new_story_voice = gr.Dropdown(choices=[], label="TTS Sesi", interactive=True, value=ctx.config.get("tts_voice", "rachel"), allow_custom_value=True)
-                        refresh_new_voices_btn = gr.Button("🔄 Sesleri Yenile")
 
                 with gr.Row():
                     generate_story_btn = gr.Button("🎭 Hikaye Oluştur", variant="primary", size="lg")
@@ -604,8 +592,12 @@ def create_fably_interface():
             except Exception as e:
                 return "", f"**Hata:** {str(e)}", gr.Column(visible=False), *[gr.Textbox(visible=False) for _ in range(20)]
 
-        def handle_transcription(audio_file):
-            return transcribe_audio(audio_file)
+        # Remove transcribe_btn click handler and handle_transcription references
+        # transcribe_btn.click(
+        #     fn=handle_transcription,
+        #     inputs=[voice_query],
+        #     outputs=[transcribed_query]
+        # )
 
         def handle_story_generation(query, prompt, temperature, max_tokens):
             if not query or not query.strip():
@@ -730,11 +722,6 @@ def create_fably_interface():
         refresh_voices_btn.click(fn=refresh_voices, outputs=[voice_select])
 
         # Create New Story Tab
-        transcribe_btn.click(
-            fn=handle_transcription,
-            inputs=[voice_query],
-            outputs=[transcribed_query]
-        )
         generate_story_btn.click(
             fn=handle_story_generation,
             inputs=[transcribed_query, prompt_input, temperature_slider, max_tokens_slider],
@@ -750,7 +737,6 @@ def create_fably_interface():
             inputs=[transcribed_query, story_output, new_story_voice],
             outputs=[new_story_status]
         )
-        refresh_new_voices_btn.click(fn=refresh_voices, outputs=[new_story_voice])
 
         # Settings Tab
         settings_inputs = [
@@ -767,6 +753,11 @@ def create_fably_interface():
             inputs=settings_inputs,
             outputs=[settings_status]
         )
+        # After saving settings, also update the new_story_voice dropdown to reflect the new default TTS model/voice
+        save_settings_btn.click(
+            fn=initialize_voice_dropdowns,
+            outputs=[new_story_voice]
+        )
 
         # ElevenLabs voices button handler
         load_elevenlabs_voices_btn.click(
@@ -776,7 +767,7 @@ def create_fably_interface():
         )
         # Also update new_story_voice dropdown when voices are loaded
         load_elevenlabs_voices_btn.click(
-            fn=refresh_voices,
+            fn=initialize_voice_dropdowns,
             outputs=[new_story_voice]
         )
 

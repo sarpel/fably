@@ -22,20 +22,12 @@ setup(
         'apa102-pi; platform_machine=="armv7l" or platform_machine=="aarch64"',
         'gpiozero; platform_machine=="armv7l" or platform_machine=="aarch64"',
         'RPi.GPIO; platform_machine=="armv7l" or platform_machine=="aarch64"',
-        # Wakeword engines (optional, platform-specific)
-        'pvporcupine; platform_machine=="armv7l" or platform_machine=="aarch64"',
-        'onnxruntime; platform_machine!="armv7l"',
     ],
     extras_require={
         'dev': [
             'black',
             'pylint',
             'pytest',
-        ],
-        'wakeword': [
-            'pvporcupine',
-            'onnxruntime', 
-            'tflite-runtime',
         ],
         'web': [
             'gradio',
@@ -47,9 +39,6 @@ setup(
             'black',
             'pylint', 
             'pytest',
-            'pvporcupine',
-            'onnxruntime',
-            'tflite-runtime', 
             'gradio',
             'plotly',
             'pandas',
