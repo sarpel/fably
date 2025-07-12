@@ -61,7 +61,17 @@ def main(list_devices, block_duration, columns, device, gain, frequency_range):
     if high <= low:
         raise click.BadParameter("HIGH must be greater than LOW")
 
-    samplerate = sd.query_devices(device, "input")["default_samplerate"]
+    if device is not None:
+        try:
+            device = int(device)
+        except ValueError:
+            pass  # string olarak bırak (isimle seçim için)
+
+    # Dilersen sabit bir sample rate dene:
+    samplerate = 16000
+    # veya cihazdan oku:
+    #samplerate = sd.query_devices(device, "input")["default_samplerate"]
+
     print(f"Listening to device {device} with {samplerate}...")
 
     delta_f = (high - low) / (columns - 1)
