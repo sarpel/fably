@@ -449,7 +449,7 @@ install_fably_dependencies() {
     
     # Web interface dependencies
     log "Installing web interface dependencies..."
-    pip install gradio plotly pandas markdown || warn "Web interface packages failed"
+    pip install gradio plotly pandas markdown zeroconf || warn "Web interface packages failed"
     
     # Install Fably
     log "Installing Fably..."
@@ -787,7 +787,7 @@ start_web_interface() {
     # Check and install web dependencies
     if ! python3 -c "import gradio" 2>/dev/null; then
         log "Installing web dependencies..."
-        pip install gradio plotly pandas markdown
+        pip install gradio plotly pandas markdown zeroconf
     fi
     
     log "Starting web interface on http://localhost:7860"
@@ -949,7 +949,7 @@ main() {
             ;;
         "web-deps")
             source .venv/bin/activate 2>/dev/null || true
-            pip install gradio plotly pandas markdown
+            pip install gradio plotly pandas markdown zeroconf
             success "Web dependencies installed"
             ;;
         "audio-test")
