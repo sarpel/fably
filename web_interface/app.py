@@ -7,6 +7,7 @@ import sys
 import yaml
 import gradio as gr
 from pathlib import Path
+import json
 from typing import List, Tuple, Optional, Dict, Any
 from gradio.themes import Soft
 import requests
@@ -535,6 +536,35 @@ def create_fably_interface():
                     visible=True
                 )
 
+            # --- Story Management Tab ---
+            with gr.Tab("🛠️ Masal Yönetimi"):
+                with gr.Row():
+                    with gr.Column(scale=2, elem_classes="fably-card"):
+                        gr.Markdown("#### Masal Listesi ve Yönetimi")
+                        story_table = gr.Dataframe(headers=["Başlık", "Okundu", "Sıra", "Etiketler", "Yaş Grubu", "Klasör"], datatype=["str", "bool", "number", "str", "str", "str"], interactive=True)
+                        filter_text = gr.Textbox(label="Başlık/Etiket Ara", placeholder="Ara...", interactive=True)
+                        filter_read = gr.Checkbox(label="Sadece Okunmamışları Göster", value=False)
+                        refresh_mgmt_btn = gr.Button("🔄 Listeyi Yenile")
+                    with gr.Column(scale=1, elem_classes="fably-card"):
+                        gr.Markdown("#### Masal Ekle/Düzenle")
+                        story_title = gr.Textbox(label="Başlık", interactive=True)
+                        story_desc = gr.Textbox(label="Açıklama", interactive=True)
+                        story_age = gr.Textbox(label="Yaş Grubu", interactive=True)
+                        story_tags = gr.Textbox(label="Etiketler (virgülle)", interactive=True)
+                        story_order = gr.Number(label="Sıra", interactive=True)
+                        story_read = gr.Checkbox(label="Okundu", value=False)
+                        story_folder = gr.Textbox(label="Klasör Adı", interactive=True)
+                        add_btn = gr.Button("➕ Ekle")
+                        edit_btn = gr.Button("✏️ Güncelle")
+                        delete_btn = gr.Button("🗑️ Sil")
+                        reset_read_btn = gr.Button("🔄 Okundu Flagini Sıfırla")
+                        archive_btn = gr.Button("📦 Arşivle/Geri Al")
+                        import_btn = gr.Button("⬆️ İçe Aktar")
+                        export_btn = gr.Button("⬇️ Dışa Aktar")
+                        mgmt_status = gr.Textbox(label="Durum", interactive=False, lines=2)
+                        import_json = gr.Textbox(label="İçe Aktarılacak JSON", lines=4, interactive=True)
+                        export_json = gr.Textbox(label="Dışa Aktarılan JSON", lines=4, interactive=False)
+
         # --- Event Handlers ---
         def handle_language_change(new_language):
             ctx.update_language(new_language)
@@ -672,6 +702,116 @@ def create_fably_interface():
                 default_value = voice_options[0][1]
             return gr.Dropdown(choices=voice_options, value=default_value)
 
+        def list_stories_for_mgmt(filter_text=None, only_unread=False):
+            stories_dir = ensure_stories_directory()
+            rows = []
+            for story_dir in sorted(stories_dir.iterdir()):
+                if story_dir.is_dir():
+                    info_path = story_dir / "story_info.json"
+                    info = {}
+                    if info_path.exists():
+                        try:
+                            with open(info_path, "r", encoding="utf-8") as f:
+                                info = json.load(f)
+                        except Exception:
+                            info = {}
+                    title = info.get("title") or info.get("query") or story_dir.name
+                    desc = info.get("desc", "")
+                    age = info.get("age", "")
+                    tags = ", ".join(info.get("tags", [])) if isinstance(info.get("tags"), list) else info.get("tags", "")
+                    order = info.get("order", 0)
+                    read = info.get("read", False)
+                    archived = info.get("archived", False)
+                    if only_unread and read:
+                        continue
+                    if filter_text and filter_text.lower() not in title.lower() and filter_text.lower() not in tags.lower():
+                        continue
+                    rows.append([title, read, order, tags, age, story_dir.name])
+            return sorted(rows, key=lambda x: x[2])
+
+        def add_story(title, desc, age, tags, order, folder):
+            stories_dir = ensure_stories_directory()
+            story_dir = stories_dir / folder
+            if story_dir.exists():
+                return False, "Bu klasör zaten var."
+            story_dir.mkdir()
+            info = {"title": title, "desc": desc, "age": age, "tags": [t.strip() for t in tags.split(",") if t.strip()], "order": order, "read": False, "archived": False}
+            with open(story_dir / "story_info.json", "w", encoding="utf-8") as f:
+                json.dump(info, f, ensure_ascii=False, indent=2)
+            return True, "Masal eklendi."
+
+        def edit_story(folder, title, desc, age, tags, order, read):
+            stories_dir = ensure_stories_directory()
+            story_dir = stories_dir / folder
+            info_path = story_dir / "story_info.json"
+            if not story_dir.exists() or not info_path.exists():
+                return False, "Masal bulunamadı."
+            with open(info_path, "r", encoding="utf-8") as f:
+                info = json.load(f)
+            info.update({"title": title, "desc": desc, "age": age, "tags": [t.strip() for t in tags.split(",") if t.strip()], "order": order, "read": read})
+            with open(info_path, "w", encoding="utf-8") as f:
+                json.dump(info, f, ensure_ascii=False, indent=2)
+            return True, "Masal güncellendi."
+
+        def delete_story(folder):
+            stories_dir = ensure_stories_directory()
+            story_dir = stories_dir / folder
+            if not story_dir.exists():
+                return False, "Masal bulunamadı."
+            for item in story_dir.iterdir():
+                if item.is_file():
+                    item.unlink()
+                elif item.is_dir():
+                    import shutil
+                    shutil.rmtree(item)
+            story_dir.rmdir()
+            return True, "Masal silindi."
+
+        def set_story_read_flag(folder, read):
+            stories_dir = ensure_stories_directory()
+            story_dir = stories_dir / folder
+            info_path = story_dir / "story_info.json"
+            if not info_path.exists():
+                return False, "Masal bulunamadı."
+            with open(info_path, "r", encoding="utf-8") as f:
+                info = json.load(f)
+            info["read"] = read
+            with open(info_path, "w", encoding="utf-8") as f:
+                json.dump(info, f, ensure_ascii=False, indent=2)
+            return True, "Okundu flag'i güncellendi."
+
+        def archive_story(folder, archive=True):
+            stories_dir = ensure_stories_directory()
+            story_dir = stories_dir / folder
+            info_path = story_dir / "story_info.json"
+            if not info_path.exists():
+                return False, "Masal bulunamadı."
+            with open(info_path, "r", encoding="utf-8") as f:
+                info = json.load(f)
+            info["archived"] = archive
+            with open(info_path, "w", encoding="utf-8") as f:
+                json.dump(info, f, ensure_ascii=False, indent=2)
+            return True, "Arşiv durumu güncellendi."
+
+        def import_story(json_str):
+            try:
+                data = json.loads(json_str)
+                folder = data.get("folder") or data.get("title")
+                return add_story(data.get("title"), data.get("desc", ""), data.get("age", ""), ",".join(data.get("tags", [])), data.get("order", 0), folder)
+            except Exception as e:
+                return False, f"İçe aktarma hatası: {str(e)}"
+
+        def export_story(folder):
+            stories_dir = ensure_stories_directory()
+            story_dir = stories_dir / folder
+            info_path = story_dir / "story_info.json"
+            if not info_path.exists():
+                return False, "Masal bulunamadı."
+            with open(info_path, "r", encoding="utf-8") as f:
+                info = json.load(f)
+            info["folder"] = folder
+            return True, json.dumps(info, ensure_ascii=False, indent=2)
+
         # --- Connect Components to Functions ---
         
         # General
@@ -749,6 +889,18 @@ def create_fably_interface():
             fn=initialize_voice_dropdowns,
             outputs=[new_story_voice]
         )
+
+        # Story Management Tab
+        refresh_mgmt_btn.click(fn=list_stories_for_mgmt, outputs=[story_table])
+        filter_text.change(fn=list_stories_for_mgmt, inputs=[filter_text, filter_read], outputs=[story_table])
+        filter_read.change(fn=list_stories_for_mgmt, inputs=[filter_text, filter_read], outputs=[story_table])
+        add_btn.click(fn=add_story, inputs=[story_title, story_desc, story_age, story_tags, story_order, story_folder], outputs=[mgmt_status])
+        edit_btn.click(fn=edit_story, inputs=[story_folder, story_title, story_desc, story_age, story_tags, story_order, story_read], outputs=[mgmt_status])
+        delete_btn.click(fn=delete_story, inputs=[story_folder], outputs=[mgmt_status])
+        reset_read_btn.click(lambda folder: set_story_read_flag(folder, False), inputs=[story_folder], outputs=[mgmt_status])
+        archive_btn.click(fn=archive_story, inputs=[story_folder], outputs=[mgmt_status])
+        import_btn.click(fn=import_story, inputs=[import_json], outputs=[mgmt_status])
+        export_btn.click(lambda folder: export_story(folder)[1] if export_story(folder)[0] else export_story(folder)[1], inputs=[story_folder], outputs=[export_json])
 
         # Initial loading actions
         app.load(
